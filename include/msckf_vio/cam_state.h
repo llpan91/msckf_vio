@@ -35,11 +35,9 @@ struct CAMState {
   // Position of the camera frame in the world frame.
   Eigen::Vector3d position;
 
-  // These two variables should have the same physical
-  // interpretation with `orientation` and `position`.
+  // These two variables should have the same physical interpretation with `orientation` and `position`.
   // There two variables are used to modify the measurement
-  // Jacobian matrices to make the observability matrix
-  // have proper null space.
+  // Jacobian matrices to make the observability matrix have proper null space.
   Eigen::Vector4d orientation_null;
   Eigen::Vector3d position_null;
 
@@ -60,8 +58,7 @@ struct CAMState {
 };
 
 typedef std::map<StateIDType, CAMState, std::less<int>,
-        Eigen::aligned_allocator<
-        std::pair<const StateIDType, CAMState> > > CamStateServer;
+        Eigen::aligned_allocator< std::pair<const StateIDType, CAMState> > > CamStateServer;
 } // namespace msckf_vio
 
 #endif // MSCKF_VIO_CAM_STATE_H

@@ -25,8 +25,7 @@
 namespace msckf_vio {
 
 /*
- * @brief ImageProcessor Detects and tracks features
- *    in image sequences.
+ * @brief ImageProcessor Detects and tracks features in image sequences.
  */
 class ImageProcessor {
 public:
@@ -48,8 +47,7 @@ public:
 private:
 
   /*
-   * @brief ProcessorConfig Configuration parameters for
-   *    feature detection and tracking.
+   * @brief ProcessorConfig Configuration parameters for feature detection and tracking.
    */
   struct ProcessorConfig {
     int grid_row;
@@ -72,8 +70,7 @@ private:
   typedef unsigned long long int FeatureIDType;
 
   /*
-   * @brief FeatureMetaData Contains necessary information
-   *    of a feature for easy access.
+   * @brief FeatureMetaData Contains necessary information of a feature for easy access.
    */
   struct FeatureMetaData {
     FeatureIDType id;
@@ -84,55 +81,46 @@ private:
   };
 
   /*
-   * @brief GridFeatures Organize features based on the grid
-   *    they belong to. Note that the key is encoded by the
-   *    grid index.
+   * @brief GridFeatures Organize features based on the grid they belong to. 
+   *  Note that the key is encoded by the grid index.
    */
   typedef std::map<int, std::vector<FeatureMetaData> > GridFeatures;
 
   /*
-   * @brief keyPointCompareByResponse
-   *    Compare two keypoints based on the response.
+   * @brief keyPointCompareByResponse, Compare two keypoints based on the response.
    */
   static bool keyPointCompareByResponse(
       const cv::KeyPoint& pt1,
       const cv::KeyPoint& pt2) {
-    // Keypoint with higher response will be at the
-    // beginning of the vector.
+    // Keypoint with higher response will be at the beginning of the vector.
     return pt1.response > pt2.response;
   }
   /*
-   * @brief featureCompareByResponse
-   *    Compare two features based on the response.
+   * @brief featureCompareByResponse, Compare two features based on the response.
    */
   static bool featureCompareByResponse(
       const FeatureMetaData& f1,
       const FeatureMetaData& f2) {
-    // Features with higher response will be at the
-    // beginning of the vector.
+    // Features with higher response will be at the beginning of the vector.
     return f1.response > f2.response;
   }
   /*
-   * @brief featureCompareByLifetime
-   *    Compare two features based on the lifetime.
+   * @brief featureCompareByLifetime, Compare two features based on the lifetime.
    */
   static bool featureCompareByLifetime(
       const FeatureMetaData& f1,
       const FeatureMetaData& f2) {
-    // Features with longer lifetime will be at the
-    // beginning of the vector.
+    // Features with longer lifetime will be at the beginning of the vector.
     return f1.lifetime > f2.lifetime;
   }
 
   /*
-   * @brief loadParameters
-   *    Load parameters from the parameter server.
+   * @brief loadParameters, Load parameters from the parameter server.
    */
   bool loadParameters();
 
   /*
-   * @brief createRosIO
-   *    Create ros publisher and subscirbers.
+   * @brief createRosIO, Create ros publisher and subscirbers.
    */
   bool createRosIO();
 
@@ -155,9 +143,8 @@ private:
 
   /*
    * @initializeFirstFrame
-   *    Initialize the image processing sequence, which is
-   *    bascially detect new features on the first set of
-   *    stereo images.
+   *  Initialize the image processing sequence, which is bascially detect new features 
+   *  on the first set of stereo images.
    */
   void initializeFirstFrame();
 
@@ -191,14 +178,12 @@ private:
 
   /*
    * @brief drawFeaturesMono
-   *    Draw tracked and newly detected features on the left
-   *    image only.
+   *    Draw tracked and newly detected features on the left image only.
    */
   void drawFeaturesMono();
   /*
    * @brief drawFeaturesStereo
-   *    Draw tracked and newly detected features on the
-   *    stereo images.
+   *    Draw tracked and newly detected features on the stereo images.
    */
   void drawFeaturesStereo();
 
@@ -217,8 +202,7 @@ private:
    * @return cam1_R_p_c: a rotation matrix which takes a vector
    *    from previous cam1 frame to current cam1 frame.
    */
-  void integrateImuData(cv::Matx33f& cam0_R_p_c,
-      cv::Matx33f& cam1_R_p_c);
+  void integrateImuData(cv::Matx33f& cam0_R_p_c, cv::Matx33f& cam1_R_p_c);
 
   /*
    * @brief predictFeatureTracking Compensates the rotation
@@ -240,8 +224,7 @@ private:
       std::vector<cv::Point2f>& compenstated_pts);
 
   /*
-   * @brief twoPointRansac Applies two point ransac algorithm
-   *    to mark the inliers in the input set.
+   * @brief twoPointRansac Applies two point ransac algorithm to mark the inliers
    * @param pts1: first set of points.
    * @param pts2: second set of points.
    * @param R_p_c: a rotation matrix takes a vector in the previous
@@ -293,14 +276,12 @@ private:
       std::vector<unsigned char>& inlier_markers);
 
   /*
-   * @brief removeUnmarkedElements Remove the unmarked elements
-   *    within a vector.
+   * @brief removeUnmarkedElements Remove the unmarked elements within a vector.
    * @param raw_vec: vector with outliers.
    * @param markers: 0 will represent a outlier, 1 will be an inlier.
    * @return refined_vec: a vector without outliers.
    *
-   * Note that the order of the inliers in the raw_vec is perserved
-   * in the refined_vec.
+   * Note that the order of the inliers in the raw_vec is perserved in the refined_vec.
    */
   template <typename T>
   void removeUnmarkedElements(

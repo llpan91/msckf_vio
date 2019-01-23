@@ -34,33 +34,26 @@ struct IMUState {
   double time;
 
   // Orientation
-  // Take a vector from the world frame to
-  // the IMU (body) frame.
+  // Take a vector from the world frame to the IMU (body) frame.
   Eigen::Vector4d orientation;
 
-  // Position of the IMU (body) frame
-  // in the world frame.
+  // Position of the IMU (body) frame in the world frame.
   Eigen::Vector3d position;
 
-  // Velocity of the IMU (body) frame
-  // in the world frame.
+  // Velocity of the IMU (body) frame in the world frame.
   Eigen::Vector3d velocity;
 
-  // Bias for measured angular velocity
-  // and acceleration.
+  // Bias for measured angular velocity and acceleration.
   Eigen::Vector3d gyro_bias;
   Eigen::Vector3d acc_bias;
 
-  // Transformation between the IMU and the
-  // left camera (cam0)
+  // Transformation between the IMU and the left camera (cam0)
   Eigen::Matrix3d R_imu_cam0;
   Eigen::Vector3d t_cam0_imu;
 
-  // These three variables should have the same physical
-  // interpretation with `orientation`, `position`, and
-  // `velocity`. There three variables are used to modify
-  // the transition matrices to make the observability matrix
-  // have proper null space.
+  // These three variables should have the same physical interpretation with `orientation`, 
+  // `position`, and`velocity`. There three variables are used to modify
+  // the transition matrices to make the observability matrix have proper null space.
   Eigen::Vector4d orientation_null;
   Eigen::Vector3d position_null;
   Eigen::Vector3d velocity_null;
@@ -74,9 +67,8 @@ struct IMUState {
   // Gravity vector in the world frame
   static Eigen::Vector3d gravity;
 
-  // Transformation offset from the IMU frame to
-  // the body frame. The transformation takes a
-  // vector from the IMU frame to the body frame.
+  // Transformation offset from the IMU frame to the body frame. 
+  // The transformation takes a vector from the IMU frame to the body frame.
   // The z axis of the body frame should point upwards.
   // Normally, this transform should be identity.
   static Eigen::Isometry3d T_imu_body;

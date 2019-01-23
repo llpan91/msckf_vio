@@ -23,10 +23,9 @@
 namespace msckf_vio {
 
 /*
- * @brief Feature Salient part of an image. Please refer
- *    to the Appendix of "A Multi-State Constraint Kalman
- *    Filter for Vision-aided Inertial Navigation" for how
- *    the 3d position of a feature is initialized.
+ * @brief Feature Salient part of an image. Please refer to the Appendix of 
+ * "A Multi-State Constraint Kalman Filter for Vision-aided Inertial Navigation" 
+ *  for how the 3d position of a feature is initialized.
  */
 struct Feature {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
