@@ -354,12 +354,9 @@ private:
   ros::NodeHandle nh;
 
   // Subscribers and publishers.
-  message_filters::Subscriber<
-    sensor_msgs::Image> cam0_img_sub;
-  message_filters::Subscriber<
-    sensor_msgs::Image> cam1_img_sub;
-  message_filters::TimeSynchronizer<
-    sensor_msgs::Image, sensor_msgs::Image> stereo_sub;
+  message_filters::Subscriber<sensor_msgs::Image> cam0_img_sub;
+  message_filters::Subscriber<sensor_msgs::Image> cam1_img_sub;
+  message_filters::TimeSynchronizer<sensor_msgs::Image, sensor_msgs::Image> stereo_sub;
   ros::Subscriber imu_sub;
   ros::Publisher feature_pub;
   ros::Publisher tracking_info_pub;

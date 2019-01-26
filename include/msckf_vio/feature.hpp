@@ -32,8 +32,7 @@ struct Feature {
   typedef long long int FeatureIDType;
 
   /*
-   * @brief OptimizationConfig Configuration parameters
-   *    for 3d feature position optimization.
+   * @brief OptimizationConfig Configuration parameters for 3d feature position optimization.
    */
   struct OptimizationConfig {
     double translation_threshold;
@@ -55,23 +54,19 @@ struct Feature {
   };
 
   // Constructors for the struct.
-  Feature(): id(0), position(Eigen::Vector3d::Zero()),
-    is_initialized(false) {}
+  Feature(): id(0), position(Eigen::Vector3d::Zero()), is_initialized(false) {}
 
-  Feature(const FeatureIDType& new_id): id(new_id),
-    position(Eigen::Vector3d::Zero()),
+  Feature(const FeatureIDType& new_id): id(new_id), position(Eigen::Vector3d::Zero()),
     is_initialized(false) {}
 
   /*
    * @brief cost Compute the cost of the camera observations
-   * @param T_c0_c1 A rigid body transformation takes
-   *    a vector in c0 frame to ci frame.
+   * @param T_c0_c1 A rigid body transformation takes a vector in c0 frame to ci frame.
    * @param x The current estimation.
    * @param z The ith measurement of the feature j in ci frame.
    * @return e The cost of this observation.
    */
-  inline void cost(const Eigen::Isometry3d& T_c0_ci,
-      const Eigen::Vector3d& x, const Eigen::Vector2d& z,
+  inline void cost(const Eigen::Isometry3d& T_c0_ci, const Eigen::Vector3d& x, const Eigen::Vector2d& z,
       double& e) const;
 
   /*
