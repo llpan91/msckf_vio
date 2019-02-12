@@ -149,6 +149,8 @@ void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
   const double &beta = x(1);
   const double &rho = x(2);
 
+  // alpha = Xj/Zj, beta = Yj/Zj, rho = 1/Zj;
+  // h as Equation (33) && Equation (34) 
   Eigen::Vector3d h = T_c0_ci.linear() * Eigen::Vector3d(alpha, beta, 1.0) +
                       rho * T_c0_ci.translation();
   double &h1 = h(0);
@@ -207,6 +209,7 @@ void Feature::generateInitialGuess(const Eigen::Isometry3d &T_c1_c2,
                                    const Eigen::Vector2d &z1,
                                    const Eigen::Vector2d &z2,
                                    Eigen::Vector3d &p) const {
+  
   // Construct a least square problem to solve the depth.
   Eigen::Vector3d m = T_c1_c2.linear() * Eigen::Vector3d(z1(0), z1(1), 1.0);
 
@@ -239,8 +242,7 @@ bool Feature::checkMotion(const CamStateServer &cam_states) const {
 
   Eigen::Isometry3d last_cam_pose;
   last_cam_pose.linear() =
-      quaternionToRotation(cam_states.find(last_cam_id)->second.orientation)
-          .transpose();
+      quaternionToRotation(cam_states.find(last_cam_id)->second.orientation).transpose();
   last_cam_pose.translation() = cam_states.find(last_cam_id)->second.position;
 
   // Get the direction of the feature when it is first observed.
