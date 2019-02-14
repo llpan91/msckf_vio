@@ -31,8 +31,7 @@ namespace msckf_vio {
 /*
  * @brief MsckfVio Implements the algorithm in
  *    Anatasios I. Mourikis, and Stergios I. Roumeliotis,
- *    "A Multi-State Constraint Kalman Filter for Vision-aided
- *    Inertial Navigation",
+ *    "A Multi-State Constraint Kalman Filter for Vision-aided Inertial Navigation",
  *    http://www.ee.ucr.edu/~mourikis/tech_reports/TR_MSCKF.pdf
  */
 class MsckfVio {

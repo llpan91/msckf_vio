@@ -98,18 +98,14 @@ private:
   /*
    * @brief featureCompareByResponse, Compare two features based on the response.
    */
-  static bool featureCompareByResponse(
-      const FeatureMetaData& f1,
-      const FeatureMetaData& f2) {
+  static bool featureCompareByResponse(const FeatureMetaData& f1, const FeatureMetaData& f2) {
     // Features with higher response will be at the beginning of the vector.
     return f1.response > f2.response;
   }
   /*
    * @brief featureCompareByLifetime, Compare two features based on the lifetime.
    */
-  static bool featureCompareByLifetime(
-      const FeatureMetaData& f1,
-      const FeatureMetaData& f2) {
+  static bool featureCompareByLifetime( const FeatureMetaData& f1, const FeatureMetaData& f2) {
     // Features with longer lifetime will be at the beginning of the vector.
     return f1.lifetime > f2.lifetime;
   }
@@ -270,10 +266,9 @@ private:
    * @return cam1_points: points in the secondary image.
    * @return inlier_markers: 1 if the match is valid, 0 otherwise.
    */
-  void stereoMatch(
-      const std::vector<cv::Point2f>& cam0_points,
-      std::vector<cv::Point2f>& cam1_points,
-      std::vector<unsigned char>& inlier_markers);
+  void stereoMatch(const std::vector<cv::Point2f>& cam0_points,
+		   std::vector<cv::Point2f>& cam1_points,
+		   std::vector<unsigned char>& inlier_markers);
 
   /*
    * @brief removeUnmarkedElements Remove the unmarked elements within a vector.
@@ -284,10 +279,10 @@ private:
    * Note that the order of the inliers in the raw_vec is perserved in the refined_vec.
    */
   template <typename T>
-  void removeUnmarkedElements(
-      const std::vector<T>& raw_vec,
-      const std::vector<unsigned char>& markers,
-      std::vector<T>& refined_vec) {
+  void removeUnmarkedElements(const std::vector<T>& raw_vec,
+			      const std::vector<unsigned char>& markers,
+			      std::vector<T>& refined_vec) {
+    
     if (raw_vec.size() != markers.size()) {
       ROS_WARN("The input size of raw_vec(%lu) and markers(%lu) does not match...",
           raw_vec.size(), markers.size());

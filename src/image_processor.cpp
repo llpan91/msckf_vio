@@ -992,10 +992,8 @@ void ImageProcessor::twoPointRansac( const vector<Point2f>& pts1, const vector<P
     // Randomly select two point pairs.
     // Although this is a weird way of selecting two pairs, but it
     // is able to efficiently avoid selecting repetitive pairs.
-    int select_idx1 = random_gen.uniformInteger(
-        0, raw_inlier_idx.size()-1);
-    int select_idx_diff = random_gen.uniformInteger(
-        1, raw_inlier_idx.size()-1);
+    int select_idx1 = random_gen.uniformInteger( 0, raw_inlier_idx.size()-1);
+    int select_idx_diff = random_gen.uniformInteger( 1, raw_inlier_idx.size()-1);
     int select_idx2 = select_idx1+select_idx_diff<raw_inlier_idx.size() ?
       select_idx1+select_idx_diff :
       select_idx1+select_idx_diff-raw_inlier_idx.size();
@@ -1011,8 +1009,7 @@ void ImageProcessor::twoPointRansac( const vector<Point2f>& pts1, const vector<P
     coeff_l1_norm[0] = coeff_tx.lpNorm<1>();
     coeff_l1_norm[1] = coeff_ty.lpNorm<1>();
     coeff_l1_norm[2] = coeff_tz.lpNorm<1>();
-    int base_indicator = min_element(coeff_l1_norm.begin(),
-        coeff_l1_norm.end())-coeff_l1_norm.begin();
+    int base_indicator = min_element(coeff_l1_norm.begin(), coeff_l1_norm.end())-coeff_l1_norm.begin();
 
     Vector3d model(0.0, 0.0, 0.0);
     if (base_indicator == 0) {
@@ -1137,12 +1134,10 @@ void ImageProcessor::publish() {
   vector<Point2f> curr_cam0_points_undistorted(0);
   vector<Point2f> curr_cam1_points_undistorted(0);
 
-  undistortPoints(
-      curr_cam0_points, cam0_intrinsics, cam0_distortion_model,
-      cam0_distortion_coeffs, curr_cam0_points_undistorted);
-  undistortPoints(
-      curr_cam1_points, cam1_intrinsics, cam1_distortion_model,
-      cam1_distortion_coeffs, curr_cam1_points_undistorted);
+  undistortPoints( curr_cam0_points, cam0_intrinsics, cam0_distortion_model,
+		   cam0_distortion_coeffs, curr_cam0_points_undistorted);
+  undistortPoints(curr_cam1_points, cam1_intrinsics, cam1_distortion_model,
+		  cam1_distortion_coeffs, curr_cam1_points_undistorted);
 
   for (int i = 0; i < curr_ids.size(); ++i) {
     feature_msg_ptr->features.push_back(FeatureMeasurement());
