@@ -260,10 +260,12 @@ bool Feature::checkMotion(const CamStateServer &cam_states) const {
   double parallel_translation = translation.transpose() * feature_direction;
   Eigen::Vector3d orthogonal_translation = translation - parallel_translation * feature_direction;
 
-  if (orthogonal_translation.norm() > optimization_config.translation_threshold)
+  if (orthogonal_translation.norm() > optimization_config.translation_threshold){
     return true;
-  else
+  }
+  else {
     return false;
+  }
 }
 
 bool Feature::initializePosition(const CamStateServer &cam_states) {
@@ -371,7 +373,6 @@ bool Feature::initializePosition(const CamStateServer &cam_states) {
     } while (inner_loop_cntr++ < optimization_config.inner_loop_max_iteration && !is_cost_reduced);
 
     inner_loop_cntr = 0;
-
   } while (outer_loop_cntr++ < optimization_config.outer_loop_max_iteration && delta_norm > optimization_config.estimation_precision);
 
   // Covert the feature position from inverse depth
