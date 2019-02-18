@@ -169,13 +169,12 @@ class MsckfVio {
   // Indicate if the gravity vector is set.
   bool is_gravity_set;
 
-  // Indicate if the received image is the first one. The
-  // system will start after receiving the first image.
+  // Indicate if the received image is the first one. 
+  // The system will start after receiving the first image.
   bool is_first_img;
 
-  // The position uncertainty threshold is used to determine
-  // when to reset the system online. Otherwise, the ever-
-  // increaseing uncertainty will make the estimation unstable.
+  // The position uncertainty threshold is used to determine when to reset the system online.
+  // Otherwise, the ever-increaseing uncertainty will make the estimation unstable.
   // Note this online reset will be some dead-reckoning.
   // Set this threshold to nonpositive to disable online reset.
   double position_std_threshold;
@@ -206,9 +205,8 @@ class MsckfVio {
   // Whether to publish tf or not.
   bool publish_tf;
 
-  // Framte rate of the stereo images. This variable is
-  // only used to determine the timing threshold of
-  // each iteration of the filter.
+  // Framte rate of the stereo images. This variable is only used to determine
+  // the timing threshold of each iteration of the filter.
   double frame_rate;
 
   // Debugging variables and functions
