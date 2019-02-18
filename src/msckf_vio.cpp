@@ -176,14 +176,11 @@ bool MsckfVio::initialize() {
   // Initialize state server
   state_server.continuous_noise_cov = Matrix<double, 12, 12>::Zero();
   state_server.continuous_noise_cov.block<3, 3>(0, 0) = Matrix3d::Identity() * IMUState::gyro_noise;
-  state_server.continuous_noise_cov.block<3, 3>(3, 3) =
-      Matrix3d::Identity() * IMUState::gyro_bias_noise;
+  state_server.continuous_noise_cov.block<3, 3>(3, 3) = Matrix3d::Identity() * IMUState::gyro_bias_noise;
   state_server.continuous_noise_cov.block<3, 3>(6, 6) = Matrix3d::Identity() * IMUState::acc_noise;
-  state_server.continuous_noise_cov.block<3, 3>(9, 9) =
-      Matrix3d::Identity() * IMUState::acc_bias_noise;
+  state_server.continuous_noise_cov.block<3, 3>(9, 9) = Matrix3d::Identity() * IMUState::acc_bias_noise;
 
-  // Initialize the chi squared test table with confidence
-  // level 0.95.
+  // Initialize the chi squared test table with confidence level 0.95.
   for (int i = 1; i < 100; ++i) {
     boost::math::chi_squared chi_squared_dist(i);
     chi_squared_test_table[i] = boost::math::quantile(chi_squared_dist, 0.05);
@@ -196,9 +193,8 @@ bool MsckfVio::initialize() {
 }
 
 void MsckfVio::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
-  // IMU msgs are pushed backed into a buffer instead of
-  // being processed immediately. The IMU msgs are processed
-  // when the next image is available, in which way, we can
+  // IMU msgs are pushed backed into a buffer instead of being processed immediately. 
+  // The IMU msgs are processed when the next image is available, in which way, we can
   // easily handle the transfer delay.
   imu_msg_buffer.push_back(*msg);
 
@@ -705,8 +701,7 @@ void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const Featur
   const Vector3d& p_w = feature.position;
   const Vector4d& z = feature.observations.find(cam_state_id)->second;
 
-  // Convert the feature position from the world frame to
-  // the cam0 and cam1 frame.
+  // Convert the feature position from the world frame to the cam0 and cam1 frame.
   Vector3d p_c0 = R_w_c0 * (p_w - t_c0_w);
   Vector3d p_c1 = R_w_c1 * (p_w - t_c1_w);
 
@@ -839,8 +834,7 @@ void MsckfVio::measurementUpdate(const MatrixXd& H, const VectorXd& r) {
 
   // Compute the Kalman gain.
   const MatrixXd& P = state_server.state_cov;
-  MatrixXd S = H_thin * P * H_thin.transpose() +
-               Feature::observation_noise * MatrixXd::Identity(H_thin.rows(), H_thin.rows());
+  MatrixXd S = H_thin * P * H_thin.transpose() + Feature::observation_noise * MatrixXd::Identity(H_thin.rows(), H_thin.rows());
   // MatrixXd K_transpose = S.fullPivHouseholderQr().solve(H_thin*P);
   MatrixXd K_transpose = S.ldlt().solve(H_thin * P);
   MatrixXd K = K_transpose.transpose();
@@ -863,8 +857,7 @@ void MsckfVio::measurementUpdate(const MatrixXd& H, const VectorXd& r) {
   }
 
   const Vector4d dq_imu = smallAngleQuaternion(delta_x_imu.head<3>());
-  state_server.imu_state.orientation =
-      quaternionMultiplication(dq_imu, state_server.imu_state.orientation);
+  state_server.imu_state.orientation = quaternionMultiplication(dq_imu, state_server.imu_state.orientation);
   state_server.imu_state.gyro_bias += delta_x_imu.segment<3>(3);
   state_server.imu_state.velocity += delta_x_imu.segment<3>(6);
   state_server.imu_state.acc_bias += delta_x_imu.segment<3>(9);
@@ -1156,8 +1149,7 @@ void MsckfVio::pruneCamStateBuffer() {
 }
 
 void MsckfVio::onlineReset() {
-  // Never perform online reset if position std threshold
-  // is non-positive.
+  // Never perform online reset if position std threshold is non-positive.
   if (position_std_threshold <= 0) return;
   static long long int online_reset_counter = 0;
 
