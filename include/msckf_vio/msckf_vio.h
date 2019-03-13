@@ -122,42 +122,31 @@ class MsckfVio {
      *    only be called before the sensor suite starts moving.
      *    e.g. while the robot is still on the ground.
      */
-    bool resetCallback(std_srvs::Trigger::Request& req,
-        std_srvs::Trigger::Response& res);
+    bool resetCallback(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& res);
 
     // Filter related functions
     // Propogate the state
-    void batchImuProcessing(
-        const double& time_bound);
-    void processModel(const double& time,
-        const Eigen::Vector3d& m_gyro,
-        const Eigen::Vector3d& m_acc);
-    void predictNewState(const double& dt,
-        const Eigen::Vector3d& gyro,
-        const Eigen::Vector3d& acc);
+    void batchImuProcessing(const double& time_bound);
+    void processModel(const double& time, const Eigen::Vector3d& m_gyro, const Eigen::Vector3d& m_acc);
+    void predictNewState(const double& dt, const Eigen::Vector3d& gyro, const Eigen::Vector3d& acc);
 
     // Measurement update
     void stateAugmentation(const double& time);
     void addFeatureObservations(const CameraMeasurementConstPtr& msg);
     // This function is used to compute the measurement Jacobian
     // for a single feature observed at a single camera frame.
-    void measurementJacobian(const StateIDType& cam_state_id,
-        const FeatureIDType& feature_id,
-        Eigen::Matrix<double, 4, 6>& H_x,
-        Eigen::Matrix<double, 4, 3>& H_f,
-        Eigen::Vector4d& r);
+    void measurementJacobian(const StateIDType& cam_state_id, const FeatureIDType& feature_id,
+			     Eigen::Matrix<double, 4, 6>& H_x,Eigen::Matrix<double, 4, 3>& H_f, Eigen::Vector4d& r);
     // This function computes the Jacobian of all measurements viewed
     // in the given camera states of this feature.
-    void featureJacobian(const FeatureIDType& feature_id,
-        const std::vector<StateIDType>& cam_state_ids,
-        Eigen::MatrixXd& H_x, Eigen::VectorXd& r);
-    void measurementUpdate(const Eigen::MatrixXd& H,
-        const Eigen::VectorXd& r);
-    bool gatingTest(const Eigen::MatrixXd& H,
-        const Eigen::VectorXd&r, const int& dof);
+    void featureJacobian(const FeatureIDType& feature_id, const std::vector<StateIDType>& cam_state_ids,
+			 Eigen::MatrixXd& H_x, Eigen::VectorXd& r);
+    
+    void measurementUpdate(const Eigen::MatrixXd& H, const Eigen::VectorXd& r);
+    
+    bool gatingTest(const Eigen::MatrixXd& H, const Eigen::VectorXd&r, const int& dof);
     void removeLostFeatures();
-    void findRedundantCamStates(
-        std::vector<StateIDType>& rm_cam_state_ids);
+    void findRedundantCamStates( std::vector<StateIDType>& rm_cam_state_ids);
     void pruneCamStateBuffer();
     // Reset the system online if the uncertainty is too large.
     void onlineReset();
@@ -224,8 +213,7 @@ class MsckfVio {
     double frame_rate;
 
     // Debugging variables and functions
-    void mocapOdomCallback(
-        const nav_msgs::OdometryConstPtr& msg);
+    void mocapOdomCallback(const nav_msgs::OdometryConstPtr& msg);
 
     ros::Subscriber mocap_odom_sub;
     ros::Publisher mocap_odom_pub;
