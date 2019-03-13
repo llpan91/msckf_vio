@@ -16,8 +16,7 @@
 
 namespace msckf_vio {
 /*
- * @brief CAMState Stored camera state in order to
- *    form measurement model.
+ * @brief CAMState Stored camera state in order to form measurement model.
  */
 struct CAMState {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -57,8 +56,7 @@ struct CAMState {
     position_null(Eigen::Vector3d::Zero()) {}
 };
 
-typedef std::map<StateIDType, CAMState, std::less<int>,
-        Eigen::aligned_allocator< std::pair<const StateIDType, CAMState> > > CamStateServer;
+typedef std::map<StateIDType, CAMState, std::less<int>, Eigen::aligned_allocator< std::pair<const StateIDType, CAMState> > > CamStateServer;
 } // namespace msckf_vio
 
 #endif // MSCKF_VIO_CAM_STATE_H

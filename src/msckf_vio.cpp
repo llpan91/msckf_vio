@@ -232,8 +232,7 @@ void MsckfVio::initializeGravityAndBias() {
   // This is the gravity in the IMU frame.
   Vector3d gravity_imu = sum_linear_acc / imu_msg_buffer.size();
 
-  // Initialize the initial orientation, so that the estimation
-  // is consistent with the inertial frame.
+  // Initialize the initial orientation, so that the estimation is consistent with the inertial frame
   double gravity_norm = gravity_imu.norm();
   IMUState::gravity = Vector3d(0.0, 0.0, -gravity_norm);
 
