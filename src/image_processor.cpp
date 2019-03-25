@@ -165,7 +165,7 @@ bool ImageProcessor::initialize() {
   ROS_INFO("Finish loading ROS parameters...");
 
   // TODO Create feature detector.
-  detector_ptr = FastFeatureDetector::create( processor_config.fast_threshold);
+  detector_ptr = cv::FastFeatureDetector::create( processor_config.fast_threshold);
 
   if (!createRosIO()) return false;
   ROS_INFO("Finish creating ROS IO...");
@@ -369,8 +369,7 @@ void ImageProcessor::trackFeatures() {
   static int grid_height = cam0_curr_img_ptr->image.rows / processor_config.grid_row;
   static int grid_width = cam0_curr_img_ptr->image.cols / processor_config.grid_col;
 
-  // Compute a rough relative rotation which takes a vector
-  // from the previous frame to the current frame.
+  // Compute a rough relative rotation from the previous frame to the current frame.
   Matx33f cam0_R_p_c;
   Matx33f cam1_R_p_c;
   integrateImuData(cam0_R_p_c, cam1_R_p_c);
@@ -397,7 +396,7 @@ void ImageProcessor::trackFeatures() {
   if (prev_ids.size() == 0) return;
 
   // Track features using LK optical flow method.
-  vector<Point2f> curr_cam0_points(0);
+  vector<cv::Point2f> curr_cam0_points(0);
   vector<unsigned char> track_inliers(0);
 
   predictFeatureTracking(prev_cam0_points, cam0_R_p_c, cam0_intrinsics, curr_cam0_points);
@@ -523,10 +522,8 @@ void ImageProcessor::trackFeatures() {
 
   ROS_INFO_THROTTLE(0.5,
       "\033[0;32m candidates: %d; track: %d; match: %d; ransac: %d/%d=%f\033[0m",
-      before_tracking, after_tracking, after_matching,
-      curr_feature_num, prev_feature_num,
-      static_cast<double>(curr_feature_num)/
-      (static_cast<double>(prev_feature_num)+1e-5));
+      before_tracking, after_tracking, after_matching, curr_feature_num, prev_feature_num,
+      static_cast<double>(curr_feature_num)/(static_cast<double>(prev_feature_num)+1e-5));
   //printf(
   //    "\033[0;32m candidates: %d; raw track: %d; stereo match: %d; ransac: %d/%d=%f\033[0m\n",
   //    before_tracking, after_tracking, after_matching,
@@ -616,7 +613,7 @@ void ImageProcessor::addNewFeatures() {
   static int grid_width = cam0_curr_img_ptr->image.cols / processor_config.grid_col;
 
   // Create a mask to avoid redetecting existing features.
-  Mat mask(curr_img.rows, curr_img.cols, CV_8U, Scalar(1));
+  cv::Mat mask(curr_img.rows, curr_img.cols, CV_8U, Scalar(1));
 
   for (const auto& features : *curr_features_ptr) {
     for (const auto& feature : features.second) {
@@ -740,14 +737,10 @@ void ImageProcessor::addNewFeatures() {
 void ImageProcessor::pruneGridFeatures() {
   for (auto& item : *curr_features_ptr) {
     auto& grid_features = item.second;
-    // Continue if the number of features in this grid does
-    // not exceed the upper bound.
+    // Continue if the number of features in this grid does not exceed the upper bound.
     if (grid_features.size() <= processor_config.grid_max_feature_num) continue;
-    std::sort(grid_features.begin(), grid_features.end(),
-        &ImageProcessor::featureCompareByLifetime);
-    grid_features.erase(grid_features.begin()+
-        processor_config.grid_max_feature_num,
-        grid_features.end());
+    std::sort(grid_features.begin(), grid_features.end(), &ImageProcessor::featureCompareByLifetime);
+    grid_features.erase(grid_features.begin()+  processor_config.grid_max_feature_num, grid_features.end());
   }
   return;
 }

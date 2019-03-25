@@ -50,9 +50,7 @@ Feature::OptimizationConfig Feature::optimization_config;
 
 map<int, double> MsckfVio::chi_squared_test_table;
 
-MsckfVio::MsckfVio(ros::NodeHandle& pnh) : is_gravity_set(false), is_first_img(true), nh(pnh) {
-  return;
-}
+MsckfVio::MsckfVio(ros::NodeHandle& pnh) : is_gravity_set(false), is_first_img(true), nh(pnh) { return; }
 
 bool MsckfVio::loadParameters() {
   // Frame id
@@ -67,8 +65,7 @@ bool MsckfVio::loadParameters() {
   nh.param<double>("tracking_rate_threshold", tracking_rate_threshold, 0.5);
 
   // Feature optimization parameters
-  nh.param<double>("feature/config/translation_threshold",
-                   Feature::optimization_config.translation_threshold, 0.2);
+  nh.param<double>("feature/config/translation_threshold", Feature::optimization_config.translation_threshold, 0.2);
 
   // Noise related parameters
   nh.param<double>("noise/gyro", IMUState::gyro_noise, 0.001);
@@ -85,9 +82,8 @@ bool MsckfVio::loadParameters() {
   Feature::observation_noise *= Feature::observation_noise;
 
   // Set the initial IMU state.
-  // The intial orientation and position will be set to the origin
-  // implicitly. But the initial velocity and bias can be
-  // set by parameters.
+  // The intial orientation and position will be set to the origin implicitly. 
+  // But the initial velocity and bias can be set by parameters.
   // TODO: is it reasonable to set the initial bias to 0?
   nh.param<double>("initial_state/velocity/x", state_server.imu_state.velocity(0), 0.0);
   nh.param<double>("initial_state/velocity/y", state_server.imu_state.velocity(1), 0.0);
@@ -176,9 +172,11 @@ bool MsckfVio::initialize() {
   // Initialize state server
   state_server.continuous_noise_cov = Matrix<double, 12, 12>::Zero();
   state_server.continuous_noise_cov.block<3, 3>(0, 0) = Matrix3d::Identity() * IMUState::gyro_noise;
-  state_server.continuous_noise_cov.block<3, 3>(3, 3) = Matrix3d::Identity() * IMUState::gyro_bias_noise;
+  state_server.continuous_noise_cov.block<3, 3>(3, 3) =
+      Matrix3d::Identity() * IMUState::gyro_bias_noise;
   state_server.continuous_noise_cov.block<3, 3>(6, 6) = Matrix3d::Identity() * IMUState::acc_noise;
-  state_server.continuous_noise_cov.block<3, 3>(9, 9) = Matrix3d::Identity() * IMUState::acc_bias_noise;
+  state_server.continuous_noise_cov.block<3, 3>(9, 9) =
+      Matrix3d::Identity() * IMUState::acc_bias_noise;
 
   // Initialize the chi squared test table with confidence level 0.95.
   for (int i = 1; i < 100; ++i) {
@@ -193,7 +191,7 @@ bool MsckfVio::initialize() {
 }
 
 void MsckfVio::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
-  // IMU msgs are pushed backed into a buffer instead of being processed immediately. 
+  // IMU msgs are pushed backed into a buffer instead of being processed immediately.
   // The IMU msgs are processed when the next image is available, in which way, we can
   // easily handle the transfer delay.
   imu_msg_buffer.push_back(*msg);
@@ -489,15 +487,14 @@ void MsckfVio::processModel(const double& time, const Vector3d& m_gyro, const Ve
   G.block<3, 3>(9, 9) = Matrix3d::Identity();
 
   // Approximate matrix exponential to the 3rd order,
-  // which can be considered to be accurate enough assuming
-  // dtime is within 0.01s.
+  // which can be considered to be accurate enough assuming dtime is within 0.01s.
   Matrix<double, 21, 21> Fdt = F * dtime;
   Matrix<double, 21, 21> Fdt_square = Fdt * Fdt;
   Matrix<double, 21, 21> Fdt_cube = Fdt_square * Fdt;
   Matrix<double, 21, 21> Phi =
       Matrix<double, 21, 21>::Identity() + Fdt + 0.5 * Fdt_square + (1.0 / 6.0) * Fdt_cube;
 
-  // Propogate the state using 4th order Runge-Kutta
+  // TODO Propogate the state using 4th order Runge-Kutta
   predictNewState(dtime, gyro, acc);
 
   // Modify the transition matrix
@@ -553,19 +550,17 @@ void MsckfVio::predictNewState(const double& dt, const Vector3d& gyro, const Vec
   Omega.block<3, 1>(0, 3) = gyro;
   Omega.block<1, 3>(3, 0) = -gyro;
 
-  Vector4d& q = state_server.imu_state.orientation;
+  Vector4d& q = state_server.imu_state.orientation; // R_global_2_IMU
   Vector3d& v = state_server.imu_state.velocity;
   Vector3d& p = state_server.imu_state.position;
 
   // Some pre-calculation
+  // q' = 0.5 * Omega * q
+  // q(n) = q(n-1) (x) q{w(n)*△t} , (X) is the quaternion Multiply << quaternion kinematics for error-state KF>> (equal-214)
   Vector4d dq_dt, dq_dt2;
   if (gyro_norm > 1e-5) {
-    dq_dt = (cos(gyro_norm * dt * 0.5) * Matrix4d::Identity() +
-             1 / gyro_norm * sin(gyro_norm * dt * 0.5) * Omega) *
-            q;
-    dq_dt2 = (cos(gyro_norm * dt * 0.25) * Matrix4d::Identity() +
-              1 / gyro_norm * sin(gyro_norm * dt * 0.25) * Omega) *
-             q;
+    dq_dt = (cos(gyro_norm * dt * 0.5) * Matrix4d::Identity() + 1 / gyro_norm * sin(gyro_norm * dt * 0.5) * Omega) * q;
+    dq_dt2 = (cos(gyro_norm * dt * 0.25) * Matrix4d::Identity() + 1 / gyro_norm * sin(gyro_norm * dt * 0.25) * Omega) * q;
   } else {
     dq_dt = (Matrix4d::Identity() + 0.5 * dt * Omega) * cos(gyro_norm * dt * 0.5) * q;
     dq_dt2 = (Matrix4d::Identity() + 0.25 * dt * Omega) * cos(gyro_norm * dt * 0.25) * q;
@@ -592,7 +587,7 @@ void MsckfVio::predictNewState(const double& dt, const Vector3d& gyro, const Vec
   Vector3d k4_v_dot = dR_dt_transpose * acc + IMUState::gravity;
   Vector3d k4_p_dot = k3_v;
 
-  // yn+1 = yn + dt/6*(k1+2*k2+2*k3+k4)
+  // TODO yn+1 = yn + dt/6*(k1+2*k2+2*k3+k4)
   q = dq_dt;
   quaternionNormalize(q);
   v = v + dt / 6 * (k1_v_dot + 2 * k2_v_dot + 2 * k3_v_dot + k4_v_dot);
@@ -659,8 +654,7 @@ void MsckfVio::addFeatureObservations(const CameraMeasurementConstPtr& msg) {
   int curr_feature_num = map_server.size();
   int tracked_feature_num = 0;
 
-  // Add new observations for existing features or new
-  // features in the map server.
+  // Add new observations for existing features or new features in the map server.
   for (const auto& feature : msg->features) {
     if (map_server.find(feature.id) == map_server.end()) {
       // This is a new feature.
@@ -680,9 +674,7 @@ void MsckfVio::addFeatureObservations(const CameraMeasurementConstPtr& msg) {
   return;
 }
 
-void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const FeatureIDType& feature_id,
-                                   Matrix<double, 4, 6>& H_x, Matrix<double, 4, 3>& H_f,
-                                   Vector4d& r) {
+void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const FeatureIDType& feature_id, Matrix<double, 4, 6>& H_x, Matrix<double, 4, 3>& H_f, Vector4d& r) {
   // Prepare all the required data.
   const CAMState& cam_state = state_server.cam_states[cam_state_id];
   const Feature& feature = map_server[feature_id];
@@ -747,9 +739,8 @@ void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const Featur
   return;
 }
 
-void MsckfVio::featureJacobian(const FeatureIDType& feature_id,
-                               const std::vector<StateIDType>& cam_state_ids, MatrixXd& H_x,
-                               VectorXd& r) {
+void MsckfVio::featureJacobian(const FeatureIDType& feature_id, const std::vector<StateIDType>& cam_state_ids, MatrixXd& H_x, VectorXd& r) {
+
   const auto& feature = map_server[feature_id];
 
   // Check how many camera states in the provided camera
@@ -785,8 +776,7 @@ void MsckfVio::featureJacobian(const FeatureIDType& feature_id,
     stack_cntr += 4;
   }
 
-  // Project the residual and Jacobians onto the nullspace
-  // of H_fj.
+  // Project the residual and Jacobians onto the nullspace of H_fj.
   JacobiSVD<MatrixXd> svd_helper(H_fj, ComputeFullU | ComputeThinV);
   MatrixXd A = svd_helper.matrixU().rightCols(jacobian_row_size - 3);
 
@@ -834,7 +824,8 @@ void MsckfVio::measurementUpdate(const MatrixXd& H, const VectorXd& r) {
 
   // Compute the Kalman gain.
   const MatrixXd& P = state_server.state_cov;
-  MatrixXd S = H_thin * P * H_thin.transpose() + Feature::observation_noise * MatrixXd::Identity(H_thin.rows(), H_thin.rows());
+  MatrixXd S = H_thin * P * H_thin.transpose() +
+               Feature::observation_noise * MatrixXd::Identity(H_thin.rows(), H_thin.rows());
   // MatrixXd K_transpose = S.fullPivHouseholderQr().solve(H_thin*P);
   MatrixXd K_transpose = S.ldlt().solve(H_thin * P);
   MatrixXd K = K_transpose.transpose();
@@ -857,7 +848,8 @@ void MsckfVio::measurementUpdate(const MatrixXd& H, const VectorXd& r) {
   }
 
   const Vector4d dq_imu = smallAngleQuaternion(delta_x_imu.head<3>());
-  state_server.imu_state.orientation = quaternionMultiplication(dq_imu, state_server.imu_state.orientation);
+  state_server.imu_state.orientation =
+      quaternionMultiplication(dq_imu, state_server.imu_state.orientation);
   state_server.imu_state.gyro_bias += delta_x_imu.segment<3>(3);
   state_server.imu_state.velocity += delta_x_imu.segment<3>(6);
   state_server.imu_state.acc_bias += delta_x_imu.segment<3>(9);
@@ -927,8 +919,7 @@ void MsckfVio::removeLostFeatures() {
       continue;
     }
 
-    // Check if the feature can be initialized if it
-    // has not been.
+    // Check if the feature can be initialized if it has not been.
     if (!feature.is_initialized) {
       if (!feature.checkMotion(state_server.cam_states)) {
         invalid_feature_ids.push_back(feature.id);
@@ -1239,8 +1230,8 @@ void MsckfVio::publish(const ros::Time& time) {
   Matrix3d P_imu_vel = state_server.state_cov.block<3, 3>(6, 6);
   Matrix3d H_vel = IMUState::T_imu_body.linear();
   Matrix3d P_body_vel = H_vel * P_imu_vel * H_vel.transpose();
-  for (int i = 0; i < 3; ++i){
-    for (int j = 0; j < 3; ++j){
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
       odom_msg.twist.covariance[i * 6 + j] = P_body_vel(i, j);
     }
   }

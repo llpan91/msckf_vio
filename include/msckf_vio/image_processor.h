@@ -8,19 +8,19 @@
 #ifndef MSCKF_VIO_IMAGE_PROCESSOR_H
 #define MSCKF_VIO_IMAGE_PROCESSOR_H
 
-#include <vector>
-#include <map>
 #include <boost/shared_ptr.hpp>
+#include <map>
 #include <opencv2/opencv.hpp>
 #include <opencv2/video.hpp>
+#include <vector>
 
-#include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/Image.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/Imu.h>
 
 namespace msckf_vio {
 
@@ -28,7 +28,7 @@ namespace msckf_vio {
  * @brief ImageProcessor Detects and tracks features in image sequences.
  */
 class ImageProcessor {
-public:
+ public:
   // Constructor
   ImageProcessor(ros::NodeHandle& n);
   // Disable copy and assign constructors.
@@ -44,8 +44,7 @@ public:
   typedef boost::shared_ptr<ImageProcessor> Ptr;
   typedef boost::shared_ptr<const ImageProcessor> ConstPtr;
 
-private:
-
+ private:
   /*
    * @brief ProcessorConfig Configuration parameters for feature detection and tracking.
    */
@@ -81,7 +80,7 @@ private:
   };
 
   /*
-   * @brief GridFeatures Organize features based on the grid they belong to. 
+   * @brief GridFeatures Organize features based on the grid they belong to.
    *  Note that the key is encoded by the grid index.
    */
   typedef std::map<int, std::vector<FeatureMetaData> > GridFeatures;
@@ -89,9 +88,7 @@ private:
   /*
    * @brief keyPointCompareByResponse, Compare two keypoints based on the response.
    */
-  static bool keyPointCompareByResponse(
-      const cv::KeyPoint& pt1,
-      const cv::KeyPoint& pt2) {
+  static bool keyPointCompareByResponse(const cv::KeyPoint& pt1, const cv::KeyPoint& pt2) {
     // Keypoint with higher response will be at the beginning of the vector.
     return pt1.response > pt2.response;
   }
@@ -105,7 +102,7 @@ private:
   /*
    * @brief featureCompareByLifetime, Compare two features based on the lifetime.
    */
-  static bool featureCompareByLifetime( const FeatureMetaData& f1, const FeatureMetaData& f2) {
+  static bool featureCompareByLifetime(const FeatureMetaData& f1, const FeatureMetaData& f2) {
     // Features with longer lifetime will be at the beginning of the vector.
     return f1.lifetime > f2.lifetime;
   }
@@ -126,9 +123,8 @@ private:
    * @param cam0_img left image.
    * @param cam1_img right image.
    */
-  void stereoCallback(
-      const sensor_msgs::ImageConstPtr& cam0_img,
-      const sensor_msgs::ImageConstPtr& cam1_img);
+  void stereoCallback(const sensor_msgs::ImageConstPtr& cam0_img,
+                      const sensor_msgs::ImageConstPtr& cam1_img);
 
   /*
    * @brief imuCallback
@@ -139,7 +135,7 @@ private:
 
   /*
    * @initializeFirstFrame
-   *  Initialize the image processing sequence, which is bascially detect new features 
+   *  Initialize the image processing sequence, which is bascially detect new features
    *  on the first set of stereo images.
    */
   void initializeFirstFrame();
@@ -213,11 +209,8 @@ private:
    *
    * Note that the input and output points are of pixel coordinates.
    */
-  void predictFeatureTracking(
-      const std::vector<cv::Point2f>& input_pts,
-      const cv::Matx33f& R_p_c,
-      const cv::Vec4d& intrinsics,
-      std::vector<cv::Point2f>& compenstated_pts);
+  void predictFeatureTracking(const std::vector<cv::Point2f>& input_pts, const cv::Matx33f& R_p_c,
+                              const cv::Vec4d& intrinsics, std::vector<cv::Point2f>& compenstated_pts);
 
   /*
    * @brief twoPointRansac Applies two point ransac algorithm to mark the inliers
@@ -232,33 +225,22 @@ private:
    * @param success_probability: the required probability of success.
    * @return inlier_flag: 1 for inliers and 0 for outliers.
    */
-  void twoPointRansac(
-      const std::vector<cv::Point2f>& pts1,
-      const std::vector<cv::Point2f>& pts2,
-      const cv::Matx33f& R_p_c,
-      const cv::Vec4d& intrinsics,
-      const std::string& distortion_model,
-      const cv::Vec4d& distortion_coeffs,
-      const double& inlier_error,
-      const double& success_probability,
-      std::vector<int>& inlier_markers);
-  void undistortPoints(
-      const std::vector<cv::Point2f>& pts_in,
-      const cv::Vec4d& intrinsics,
-      const std::string& distortion_model,
-      const cv::Vec4d& distortion_coeffs,
-      std::vector<cv::Point2f>& pts_out,
-      const cv::Matx33d &rectification_matrix = cv::Matx33d::eye(),
-      const cv::Vec4d &new_intrinsics = cv::Vec4d(1,1,0,0));
-  void rescalePoints(
-      std::vector<cv::Point2f>& pts1,
-      std::vector<cv::Point2f>& pts2,
-      float& scaling_factor);
-  std::vector<cv::Point2f> distortPoints(
-      const std::vector<cv::Point2f>& pts_in,
-      const cv::Vec4d& intrinsics,
-      const std::string& distortion_model,
-      const cv::Vec4d& distortion_coeffs);
+  void twoPointRansac(const std::vector<cv::Point2f>& pts1, const std::vector<cv::Point2f>& pts2,
+                      const cv::Matx33f& R_p_c, const cv::Vec4d& intrinsics,
+                      const std::string& distortion_model, const cv::Vec4d& distortion_coeffs,
+                      const double& inlier_error, const double& success_probability,
+                      std::vector<int>& inlier_markers);
+  void undistortPoints(const std::vector<cv::Point2f>& pts_in, const cv::Vec4d& intrinsics,
+                       const std::string& distortion_model, const cv::Vec4d& distortion_coeffs,
+                       std::vector<cv::Point2f>& pts_out,
+                       const cv::Matx33d& rectification_matrix = cv::Matx33d::eye(),
+                       const cv::Vec4d& new_intrinsics = cv::Vec4d(1, 1, 0, 0));
+  void rescalePoints(std::vector<cv::Point2f>& pts1, std::vector<cv::Point2f>& pts2,
+                     float& scaling_factor);
+  std::vector<cv::Point2f> distortPoints(const std::vector<cv::Point2f>& pts_in,
+                                         const cv::Vec4d& intrinsics,
+                                         const std::string& distortion_model,
+                                         const cv::Vec4d& distortion_coeffs);
 
   /*
    * @brief stereoMatch Matches features with stereo image pairs.
@@ -267,8 +249,8 @@ private:
    * @return inlier_markers: 1 if the match is valid, 0 otherwise.
    */
   void stereoMatch(const std::vector<cv::Point2f>& cam0_points,
-		   std::vector<cv::Point2f>& cam1_points,
-		   std::vector<unsigned char>& inlier_markers);
+                   std::vector<cv::Point2f>& cam1_points,
+                   std::vector<unsigned char>& inlier_markers);
 
   /*
    * @brief removeUnmarkedElements Remove the unmarked elements within a vector.
@@ -280,12 +262,10 @@ private:
    */
   template <typename T>
   void removeUnmarkedElements(const std::vector<T>& raw_vec,
-			      const std::vector<unsigned char>& markers,
-			      std::vector<T>& refined_vec) {
-    
+                              const std::vector<unsigned char>& markers,
+                              std::vector<T>& refined_vec) {
     if (raw_vec.size() != markers.size()) {
-      ROS_WARN("The input size of raw_vec(%lu) and markers(%lu) does not match...",
-          raw_vec.size(), markers.size());
+      ROS_WARN("The input size of raw_vec(%lu) and markers(%lu) does not match...", raw_vec.size(), markers.size());
     }
     for (int i = 0; i < markers.size(); ++i) {
       if (markers[i] == 0) continue;
@@ -366,6 +346,6 @@ private:
 typedef ImageProcessor::Ptr ImageProcessorPtr;
 typedef ImageProcessor::ConstPtr ImageProcessorConstPtr;
 
-} // end namespace msckf_vio
+}  // end namespace msckf_vio
 
 #endif

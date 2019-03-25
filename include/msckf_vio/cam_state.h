@@ -56,6 +56,7 @@ struct CAMState {
     position_null(Eigen::Vector3d::Zero()) {}
 };
 
+// typedef long long int StateIDType;
 typedef std::map<StateIDType, CAMState, std::less<int>, Eigen::aligned_allocator< std::pair<const StateIDType, CAMState> > > CamStateServer;
 } // namespace msckf_vio
 
