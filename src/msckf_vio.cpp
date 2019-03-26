@@ -178,7 +178,8 @@ bool MsckfVio::initialize() {
   state_server.continuous_noise_cov.block<3, 3>(9, 9) =
       Matrix3d::Identity() * IMUState::acc_bias_noise;
 
-  // Initialize the chi squared test table with confidence level 0.95.
+  // Initialize the chi squared test table with confidence
+  // level 0.95.
   for (int i = 1; i < 100; ++i) {
     boost::math::chi_squared chi_squared_dist(i);
     chi_squared_test_table[i] = boost::math::quantile(chi_squared_dist, 0.05);
@@ -191,6 +192,7 @@ bool MsckfVio::initialize() {
 }
 
 void MsckfVio::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
+
   // IMU msgs are pushed backed into a buffer instead of being processed immediately.
   // The IMU msgs are processed when the next image is available, in which way, we can
   // easily handle the transfer delay.
@@ -202,7 +204,6 @@ void MsckfVio::imuCallback(const sensor_msgs::ImuConstPtr& msg) {
     initializeGravityAndBias();
     is_gravity_set = true;
   }
-
   return;
 }
 
@@ -223,13 +224,11 @@ void MsckfVio::initializeGravityAndBias() {
   }
 
   state_server.imu_state.gyro_bias = sum_angular_vel / imu_msg_buffer.size();
-  // IMUState::gravity =
-  //  -sum_linear_acc / imu_msg_buffer.size();
+  // IMUState::gravity = -sum_linear_acc / imu_msg_buffer.size();
   // This is the gravity in the IMU frame.
   Vector3d gravity_imu = sum_linear_acc / imu_msg_buffer.size();
 
-  // Initialize the initial orientation, so that the estimation
-  // is consistent with the inertial frame.
+  // Initialize the initial orientation, so that the estimation is consistent with the inertial frame
   double gravity_norm = gravity_imu.norm();
   IMUState::gravity = Vector3d(0.0, 0.0, -gravity_norm);
 
@@ -693,7 +692,8 @@ void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const Featur
   const Vector3d& p_w = feature.position;
   const Vector4d& z = feature.observations.find(cam_state_id)->second;
 
-  // Convert the feature position from the world frame to the cam0 and cam1 frame.
+  // Convert the feature position from the world frame to
+  // the cam0 and cam1 frame.
   Vector3d p_c0 = R_w_c0 * (p_w - t_c0_w);
   Vector3d p_c1 = R_w_c1 * (p_w - t_c1_w);
 
@@ -1140,7 +1140,8 @@ void MsckfVio::pruneCamStateBuffer() {
 }
 
 void MsckfVio::onlineReset() {
-  // Never perform online reset if position std threshold is non-positive.
+  // Never perform online reset if position std threshold
+  // is non-positive.
   if (position_std_threshold <= 0) return;
   static long long int online_reset_counter = 0;
 
@@ -1230,14 +1231,17 @@ void MsckfVio::publish(const ros::Time& time) {
   Matrix3d P_imu_vel = state_server.state_cov.block<3, 3>(6, 6);
   Matrix3d H_vel = IMUState::T_imu_body.linear();
   Matrix3d P_body_vel = H_vel * P_imu_vel * H_vel.transpose();
+
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 3; ++j) {
       odom_msg.twist.covariance[i * 6 + j] = P_body_vel(i, j);
     }
   }
+
   odom_pub.publish(odom_msg);
 
-  // Publish the 3D positions of the features that has been initialized.
+  // Publish the 3D positions of the features that
+  // has been initialized.
   pcl::PointCloud<pcl::PointXYZ>::Ptr feature_msg_ptr(new pcl::PointCloud<pcl::PointXYZ>());
   feature_msg_ptr->header.frame_id = fixed_frame_id;
   feature_msg_ptr->height = 1;

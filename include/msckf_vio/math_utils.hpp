@@ -83,10 +83,10 @@ inline Eigen::Vector4d quaternionMultiplication(const Eigen::Vector4d& q1,
  * @note This function is useful to convert delta quaternion
  *    which is usually a 3x1 vector to a full quaternion.
  *    For more details, check Section 3.2 "Kalman Filter Update" in
- *    "Indirect Kalman Filter for 3D Attitude Estimation:
- *    A Tutorial for quaternion Algebra".
+ *    "Indirect Kalman Filter for 3D Attitude Estimation:  A Tutorial for quaternion Algebra".
  */
 inline Eigen::Vector4d smallAngleQuaternion(const Eigen::Vector3d& dtheta) {
+
   Eigen::Vector3d dq = dtheta / 2.0;
   Eigen::Vector4d q;
   double dq_square_norm = dq.squaredNorm();
@@ -105,31 +105,27 @@ inline Eigen::Vector4d smallAngleQuaternion(const Eigen::Vector3d& dtheta) {
 
 /*
  * @brief Convert a quaternion to the corresponding rotation matrix
- * @note Pay attention to the convention used. The function follows the
- *    conversion in "Indirect Kalman Filter for 3D Attitude Estimation:
- *    A Tutorial for Quaternion Algebra", Equation (78).
+ * @note Pay attention to the convention used. The function follows the conversion in 
+ * "Indirect Kalman Filter for 3D Attitude Estimation: A Tutorial for Quaternion Algebra", Equation (78).
  *
- *    The input quaternion should be in the form
- *      [q1, q2, q3, q4(scalar)]^T
+ * The input quaternion should be in the form [q1, q2, q3, q4(scalar)]^T
  */
 inline Eigen::Matrix3d quaternionToRotation(const Eigen::Vector4d& q) {
+  
   const Eigen::Vector3d& q_vec = q.block(0, 0, 3, 1);
   const double& q4 = q(3);
-  Eigen::Matrix3d R = (2 * q4 * q4 - 1) * Eigen::Matrix3d::Identity() -
-                      2 * q4 * skewSymmetric(q_vec) + 2 * q_vec * q_vec.transpose();
-  // TODO: Is it necessary to use the approximation equation
-  //    (Equation (87)) when the rotation angle is small?
+  Eigen::Matrix3d R = (2*q4*q4-1)*Eigen::Matrix3d::Identity() - 2 * q4 * skewSymmetric(q_vec) + 2 * q_vec * q_vec.transpose();
+  //TODO: Is it necessary to use the approximation equation (Equation (87)) when the rotation angle is small?
+
   return R;
 }
 
 /*
  * @brief Convert a rotation matrix to a quaternion.
- * @note Pay attention to the convention used. The function follows the
- *    conversion in "Indirect Kalman Filter for 3D Attitude Estimation:
- *    A Tutorial for Quaternion Algebra", Equation (78).
+ * @note Pay attention to the convention used. The function follows the conversion in 
+ * "Indirect Kalman Filter for 3D Attitude Estimation: A Tutorial for Quaternion Algebra", Equation (78).
  *
- *    The input quaternion should be in the form
- *      [q1, q2, q3, q4(scalar)]^T
+ *    The input quaternion should be in the form [q1, q2, q3, q4(scalar)]^T
  */
 inline Eigen::Vector4d rotationToQuaternion(const Eigen::Matrix3d& R) {
   Eigen::Vector4d score;
