@@ -51,9 +51,8 @@ struct IMUState {
   Eigen::Matrix3d R_imu_cam0;
   Eigen::Vector3d t_cam0_imu;
 
-  // These three variables should have the same physical interpretation with `orientation`, 
-  // `position`, and`velocity`. There three variables are used to modify
-  // the transition matrices to make the observability matrix have proper null space.
+  // These three variables should have the same physical interpretation with `orientation`, `position`, and`velocity`. 
+  // There three variables are used to modify the transition matrices to make the observability matrix have proper null space.
   Eigen::Vector4d orientation_null;
   Eigen::Vector3d position_null;
   Eigen::Vector3d velocity_null;

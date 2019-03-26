@@ -302,8 +302,7 @@ void MsckfVio::featureCallback(const CameraMeasurementConstPtr& msg) {
   if (!is_gravity_set) return;
 
   // Start the system if the first image is received.
-  // The frame where the first image is received will be
-  // the origin.
+  // The frame where the first image is received will be the origin.
   if (is_first_img) {
     is_first_img = false;
     state_server.imu_state.time = msg->header.stamp.toSec();
@@ -324,8 +323,7 @@ void MsckfVio::featureCallback(const CameraMeasurementConstPtr& msg) {
   stateAugmentation(msg->header.stamp.toSec());
   double state_augmentation_time = (ros::Time::now() - start_time).toSec();
 
-  // Add new observations for existing features or new
-  // features in the map server.
+  // Add new observations for existing features or new features in the map server.
   start_time = ros::Time::now();
   addFeatureObservations(msg);
   double add_observations_time = (ros::Time::now() - start_time).toSec();
@@ -373,17 +371,14 @@ void MsckfVio::featureCallback(const CameraMeasurementConstPtr& msg) {
 void MsckfVio::mocapOdomCallback(const nav_msgs::OdometryConstPtr& msg) {
   static bool first_mocap_odom_msg = true;
 
-  // If this is the first mocap odometry messsage, set
-  // the initial frame.
+  // If this is the first mocap odometry messsage, set the initial frame.
   if (first_mocap_odom_msg) {
     Quaterniond orientation;
     Vector3d translation;
     tf::pointMsgToEigen(msg->pose.pose.position, translation);
     tf::quaternionMsgToEigen(msg->pose.pose.orientation, orientation);
-    // tf::vectorMsgToEigen(
-    //    msg->transform.translation, translation);
-    // tf::quaternionMsgToEigen(
-    //    msg->transform.rotation, orientation);
+    // tf::vectorMsgToEigen( msg->transform.translation, translation);
+    // tf::quaternionMsgToEigen( msg->transform.rotation, orientation);
     mocap_initial_frame.linear() = orientation.toRotationMatrix();
     mocap_initial_frame.translation() = translation;
     first_mocap_odom_msg = false;
@@ -392,10 +387,8 @@ void MsckfVio::mocapOdomCallback(const nav_msgs::OdometryConstPtr& msg) {
   // Transform the ground truth.
   Quaterniond orientation;
   Vector3d translation;
-  // tf::vectorMsgToEigen(
-  //    msg->transform.translation, translation);
-  // tf::quaternionMsgToEigen(
-  //    msg->transform.rotation, orientation);
+  // tf::vectorMsgToEigen( msg->transform.translation, translation);
+  // tf::quaternionMsgToEigen( msg->transform.rotation, orientation);
   tf::pointMsgToEigen(msg->pose.pose.position, translation);
   tf::quaternionMsgToEigen(msg->pose.pose.orientation, orientation);
 
@@ -406,8 +399,7 @@ void MsckfVio::mocapOdomCallback(const nav_msgs::OdometryConstPtr& msg) {
 
   // Eigen::Vector3d body_velocity_gt;
   // tf::vectorMsgToEigen(msg->twist.twist.linear, body_velocity_gt);
-  // body_velocity_gt = mocap_initial_frame.linear().transpose() *
-  //  body_velocity_gt;
+  // body_velocity_gt = mocap_initial_frame.linear().transpose() * body_velocity_gt;
 
   // Ground truth tf.
   if (publish_tf) {
@@ -424,8 +416,7 @@ void MsckfVio::mocapOdomCallback(const nav_msgs::OdometryConstPtr& msg) {
   mocap_odom_msg.child_frame_id = child_frame_id + "_mocap";
 
   tf::poseEigenToMsg(T_b_w_gt, mocap_odom_msg.pose.pose);
-  // tf::vectorEigenToMsg(body_velocity_gt,
-  //    mocap_odom_msg.twist.twist.linear);
+  // tf::vectorEigenToMsg(body_velocity_gt, mocap_odom_msg.twist.twist.linear);
 
   mocap_odom_pub.publish(mocap_odom_msg);
   return;
@@ -442,12 +433,10 @@ void MsckfVio::batchImuProcessing(const double& time_bound) {
       continue;
     }
     if (imu_time > time_bound) break;
-
     // Convert the msgs.
     Vector3d m_gyro, m_acc;
     tf::vectorMsgToEigen(imu_msg.angular_velocity, m_gyro);
     tf::vectorMsgToEigen(imu_msg.linear_acceleration, m_acc);
-
     // Execute process model.
     processModel(imu_time, m_gyro, m_acc);
     ++used_imu_msg_cntr;
@@ -455,10 +444,8 @@ void MsckfVio::batchImuProcessing(const double& time_bound) {
 
   // Set the state ID for the new IMU state.
   state_server.imu_state.id = IMUState::next_id++;
-
   // Remove all used IMU msgs.
   imu_msg_buffer.erase(imu_msg_buffer.begin(), imu_msg_buffer.begin() + used_imu_msg_cntr);
-
   return;
 }
 
@@ -475,8 +462,7 @@ void MsckfVio::processModel(const double& time, const Vector3d& m_gyro, const Ve
 
   F.block<3, 3>(0, 0) = -skewSymmetric(gyro);
   F.block<3, 3>(0, 3) = -Matrix3d::Identity();
-  F.block<3, 3>(6, 0) =
-      -quaternionToRotation(imu_state.orientation).transpose() * skewSymmetric(acc);
+  F.block<3, 3>(6, 0) = -quaternionToRotation(imu_state.orientation).transpose() * skewSymmetric(acc);
   F.block<3, 3>(6, 9) = -quaternionToRotation(imu_state.orientation).transpose();
   F.block<3, 3>(12, 6) = Matrix3d::Identity();
 
@@ -508,9 +494,7 @@ void MsckfVio::processModel(const double& time, const Vector3d& m_gyro, const Ve
   Phi.block<3, 3>(6, 0) = A1 - (A1 * u - w1) * s;
 
   Matrix3d A2 = Phi.block<3, 3>(12, 0);
-  Vector3d w2 = skewSymmetric(dtime * imu_state.velocity_null + imu_state.position_null -
-                              imu_state.position) *
-                IMUState::gravity;
+  Vector3d w2 = skewSymmetric(dtime * imu_state.velocity_null + imu_state.position_null - imu_state.position) * IMUState::gravity;
   Phi.block<3, 3>(12, 0) = A2 - (A2 * u - w2) * s;
 
   // Propogate the state covariance matrix.
@@ -540,9 +524,8 @@ void MsckfVio::processModel(const double& time, const Vector3d& m_gyro, const Ve
   return;
 }
 
+// TODO which param should output ??
 void MsckfVio::predictNewState(const double& dt, const Vector3d& gyro, const Vector3d& acc) {
-  // TODO: Will performing the forward integration using
-  //    the inverse of the quaternion give better accuracy?
   double gyro_norm = gyro.norm();
   Matrix4d Omega = Matrix4d::Zero();
   Omega.block<3, 3>(0, 0) = -skewSymmetric(gyro);
@@ -559,41 +542,41 @@ void MsckfVio::predictNewState(const double& dt, const Vector3d& gyro, const Vec
   Vector4d dq_dt, dq_dt2;
   if (gyro_norm > 1e-5) {
     dq_dt = (cos(gyro_norm * dt * 0.5) * Matrix4d::Identity() + 1 / gyro_norm * sin(gyro_norm * dt * 0.5) * Omega) * q;
-    dq_dt2 = (cos(gyro_norm * dt * 0.25) * Matrix4d::Identity() + 1 / gyro_norm * sin(gyro_norm * dt * 0.25) * Omega) * q;
-  } else {
-    dq_dt = (Matrix4d::Identity() + 0.5 * dt * Omega) * cos(gyro_norm * dt * 0.5) * q;
-    dq_dt2 = (Matrix4d::Identity() + 0.25 * dt * Omega) * cos(gyro_norm * dt * 0.25) * q;
+      dq_dt2 = (cos(gyro_norm * dt * 0.25) * Matrix4d::Identity() + 1 / gyro_norm * sin(gyro_norm * dt * 0.25) * Omega) * q;
+    } else {
+      dq_dt = (Matrix4d::Identity() + 0.5 * dt * Omega) * cos(gyro_norm * dt * 0.5) * q;
+      dq_dt2 = (Matrix4d::Identity() + 0.25 * dt * Omega) * cos(gyro_norm * dt * 0.25) * q;
+    }
+    Matrix3d dR_dt_transpose = quaternionToRotation(dq_dt).transpose();
+    Matrix3d dR_dt2_transpose = quaternionToRotation(dq_dt2).transpose();
+
+    // k1 = f(tn, yn)
+    Vector3d k1_v_dot = quaternionToRotation(q).transpose() * acc + IMUState::gravity;
+    Vector3d k1_p_dot = v;
+
+    // k2 = f(tn+dt/2, yn+k1*dt/2)
+    Vector3d k1_v = v + k1_v_dot * dt / 2;
+    Vector3d k2_v_dot = dR_dt2_transpose * acc + IMUState::gravity;
+    Vector3d k2_p_dot = k1_v;
+
+    // k3 = f(tn+dt/2, yn+k2*dt/2)
+    Vector3d k2_v = v + k2_v_dot * dt / 2;
+    Vector3d k3_v_dot = dR_dt2_transpose * acc + IMUState::gravity;
+    Vector3d k3_p_dot = k2_v;
+
+    // k4 = f(tn+dt, yn+k3*dt)
+    Vector3d k3_v = v + k3_v_dot * dt;
+    Vector3d k4_v_dot = dR_dt_transpose * acc + IMUState::gravity;
+    Vector3d k4_p_dot = k3_v;
+
+    // TODO yn+1 = yn + dt/6*(k1+2*k2+2*k3+k4)
+    q = dq_dt;
+    quaternionNormalize(q);
+    v = v + dt / 6 * (k1_v_dot + 2 * k2_v_dot + 2 * k3_v_dot + k4_v_dot);
+    p = p + dt / 6 * (k1_p_dot + 2 * k2_p_dot + 2 * k3_p_dot + k4_p_dot);
+
+    return;
   }
-  Matrix3d dR_dt_transpose = quaternionToRotation(dq_dt).transpose();
-  Matrix3d dR_dt2_transpose = quaternionToRotation(dq_dt2).transpose();
-
-  // k1 = f(tn, yn)
-  Vector3d k1_v_dot = quaternionToRotation(q).transpose() * acc + IMUState::gravity;
-  Vector3d k1_p_dot = v;
-
-  // k2 = f(tn+dt/2, yn+k1*dt/2)
-  Vector3d k1_v = v + k1_v_dot * dt / 2;
-  Vector3d k2_v_dot = dR_dt2_transpose * acc + IMUState::gravity;
-  Vector3d k2_p_dot = k1_v;
-
-  // k3 = f(tn+dt/2, yn+k2*dt/2)
-  Vector3d k2_v = v + k2_v_dot * dt / 2;
-  Vector3d k3_v_dot = dR_dt2_transpose * acc + IMUState::gravity;
-  Vector3d k3_p_dot = k2_v;
-
-  // k4 = f(tn+dt, yn+k3*dt)
-  Vector3d k3_v = v + k3_v_dot * dt;
-  Vector3d k4_v_dot = dR_dt_transpose * acc + IMUState::gravity;
-  Vector3d k4_p_dot = k3_v;
-
-  // TODO yn+1 = yn + dt/6*(k1+2*k2+2*k3+k4)
-  q = dq_dt;
-  quaternionNormalize(q);
-  v = v + dt / 6 * (k1_v_dot + 2 * k2_v_dot + 2 * k3_v_dot + k4_v_dot);
-  p = p + dt / 6 * (k1_p_dot + 2 * k2_p_dot + 2 * k3_p_dot + k4_p_dot);
-
-  return;
-}
 
 void MsckfVio::stateAugmentation(const double& time) {
   const Matrix3d& R_i_c = state_server.imu_state.R_imu_cam0;
@@ -616,8 +599,7 @@ void MsckfVio::stateAugmentation(const double& time) {
 
   // Update the covariance matrix of the state.
   // To simplify computation, the matrix J below is the nontrivial block
-  // in Equation (16) in "A Multi-State Constraint Kalman Filter for Vision
-  // -aided Inertial Navigation".
+  // in Equation (16) in "A Multi-State Constraint Kalman Filter for Vision-aided Inertial Navigation".
   Matrix<double, 6, 21> J = Matrix<double, 6, 21>::Zero();
   J.block<3, 3>(0, 0) = R_i_c;
   J.block<3, 3>(0, 15) = Matrix3d::Identity();
@@ -637,8 +619,7 @@ void MsckfVio::stateAugmentation(const double& time) {
 
   // Fill in the augmented state covariance.
   state_server.state_cov.block(old_rows, 0, 6, old_cols) << J * P11, J * P12;
-  state_server.state_cov.block(0, old_cols, old_rows, 6) =
-      state_server.state_cov.block(old_rows, 0, 6, old_cols).transpose();
+  state_server.state_cov.block(0, old_cols, old_rows, 6) = state_server.state_cov.block(old_rows, 0, 6, old_cols).transpose();
   state_server.state_cov.block<6, 6>(old_rows, old_cols) = J * P11 * J.transpose();
 
   // Fix the covariance to be symmetric
@@ -658,22 +639,19 @@ void MsckfVio::addFeatureObservations(const CameraMeasurementConstPtr& msg) {
     if (map_server.find(feature.id) == map_server.end()) {
       // This is a new feature.
       map_server[feature.id] = Feature(feature.id);
-      map_server[feature.id].observations[state_id] =
-          Vector4d(feature.u0, feature.v0, feature.u1, feature.v1);
+      map_server[feature.id].observations[state_id] = Vector4d(feature.u0, feature.v0, feature.u1, feature.v1);
     } else {
       // This is an old feature.
-      map_server[feature.id].observations[state_id] =
-          Vector4d(feature.u0, feature.v0, feature.u1, feature.v1);
+      map_server[feature.id].observations[state_id] = Vector4d(feature.u0, feature.v0, feature.u1, feature.v1);
       ++tracked_feature_num;
     }
   }
-
   tracking_rate = static_cast<double>(tracked_feature_num) / static_cast<double>(curr_feature_num);
-
   return;
 }
 
-void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const FeatureIDType& feature_id, Matrix<double, 4, 6>& H_x, Matrix<double, 4, 3>& H_f, Vector4d& r) {
+void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const FeatureIDType& feature_id, 
+				   Matrix<double, 4, 6>& H_x, Matrix<double, 4, 3>& H_f, Vector4d& r) {
   // Prepare all the required data.
   const CAMState& cam_state = state_server.cam_states[cam_state_id];
   const Feature& feature = map_server[feature_id];
@@ -692,8 +670,7 @@ void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const Featur
   const Vector3d& p_w = feature.position;
   const Vector4d& z = feature.observations.find(cam_state_id)->second;
 
-  // Convert the feature position from the world frame to
-  // the cam0 and cam1 frame.
+  // Convert the feature position from the world frame to the cam0 and cam1 frame.
   Vector3d p_c0 = R_w_c0 * (p_w - t_c0_w);
   Vector3d p_c1 = R_w_c1 * (p_w - t_c1_w);
 

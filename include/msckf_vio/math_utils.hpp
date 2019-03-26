@@ -54,24 +54,6 @@ inline Eigen::Vector4d quaternionMultiplication(const Eigen::Vector4d& q1,
        -q1(2), q1(3), q1(0), q1(1),
        q1(1), -q1(0), q1(3), q1(2),
        -q1(0),-q1(1), -q1(2), q1(3);
-  /*
-  L(0, 0) = q1(3);
-  L(0, 1) = q1(2);
-  L(0, 2) = -q1(1);
-  L(0, 3) = q1(0);
-  L(1, 0) = -q1(2);
-  L(1, 1) = q1(3);
-  L(1, 2) = q1(0);
-  L(1, 3) = q1(1);
-  L(2, 0) = q1(1);
-  L(2, 1) = -q1(0);
-  L(2, 2) = q1(3);
-  L(2, 3) = q1(2);
-  L(3, 0) = -q1(0);
-  L(3, 1) = -q1(1);
-  L(3, 2) = -q1(2);
-  L(3, 3) = q1(3);
-  */
   
   Eigen::Vector4d q = L * q2;
   quaternionNormalize(q);

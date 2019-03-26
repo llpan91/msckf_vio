@@ -63,9 +63,7 @@ class MsckfVio {
 
   private:
     /*
-     * @brief StateServer Store one IMU states and several
-     *    camera states for constructing measurement
-     *    model.
+     * @brief StateServer Store one IMU states and several camera states for constructing measurement model.
      */
     struct StateServer {
       IMUState imu_state;

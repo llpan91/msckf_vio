@@ -56,8 +56,7 @@ struct Feature {
   // Constructors for the struct.
   Feature() : id(0), position(Eigen::Vector3d::Zero()), is_initialized(false) {}
 
-  Feature(const FeatureIDType &new_id)
-      : id(new_id), position(Eigen::Vector3d::Zero()), is_initialized(false) {}
+  Feature(const FeatureIDType &new_id): id(new_id), position(Eigen::Vector3d::Zero()), is_initialized(false) {}
 
   /*
    * @brief Compute the cost of the camera observations
@@ -138,8 +137,7 @@ struct Feature {
 
 typedef Feature::FeatureIDType FeatureIDType;
 typedef std::map<FeatureIDType, Feature, std::less<int>,
-                 Eigen::aligned_allocator<std::pair<const FeatureIDType, Feature>>>
-    MapServer;
+                 Eigen::aligned_allocator<std::pair<const FeatureIDType, Feature> > > MapServer;
 
 void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
                    const Eigen::Vector2d &z, double &e) const {
@@ -265,8 +263,8 @@ bool Feature::checkMotion(const CamStateServer &cam_states) const {
 
 bool Feature::initializePosition(const CamStateServer &cam_states) {
   // Organize camera poses and feature observations properly.
-  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> cam_poses(0);
-  std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> measurements(0);
+  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d> > cam_poses(0);
+  std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > measurements(0);
 
   for (auto &m : observations) {
     // TODO: This should be handled properly. Normally, the required camera states
