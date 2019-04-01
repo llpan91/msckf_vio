@@ -261,8 +261,7 @@ class ImageProcessor {
    * Note that the order of the inliers in the raw_vec is perserved in the refined_vec.
    */
   template <typename T>
-  void removeUnmarkedElements(const std::vector<T>& raw_vec,
-                              const std::vector<unsigned char>& markers,
+  void removeUnmarkedElements(const std::vector<T>& raw_vec, const std::vector<unsigned char>& markers,
                               std::vector<T>& refined_vec) {
     if (raw_vec.size() != markers.size()) {
       ROS_WARN("The input size of raw_vec(%lu) and markers(%lu) does not match...", raw_vec.size(), markers.size());
