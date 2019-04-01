@@ -8,7 +8,7 @@ ProjectRootRelative=
 
 [CMake][CMake Build Directory 0]
 Build Directory Path=file:///home/pan/Github/ORB_SLAM2/build
-Build Type=Debug
+Build Type=Release
 CMake Binary=file:///usr/bin/cmake
 Environment Profile=
 Extra Arguments=

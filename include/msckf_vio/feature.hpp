@@ -56,7 +56,8 @@ struct Feature {
   // Constructors for the struct.
   Feature() : id(0), position(Eigen::Vector3d::Zero()), is_initialized(false) {}
 
-  Feature(const FeatureIDType &new_id): id(new_id), position(Eigen::Vector3d::Zero()), is_initialized(false) {}
+  Feature(const FeatureIDType &new_id)
+      : id(new_id), position(Eigen::Vector3d::Zero()), is_initialized(false) {}
 
   /*
    * @brief Compute the cost of the camera observations
@@ -65,8 +66,8 @@ struct Feature {
    * @param z The ith measurement of the feature j in ci frame.
    * @return e The cost of this observation.
    */
-  inline void cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
-                   const Eigen::Vector2d &z, double &e) const;
+  inline void cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x, const Eigen::Vector2d &z,
+                   double &e) const;
 
   /*
    * @brief Compute the Jacobian of the camera observation
@@ -77,9 +78,8 @@ struct Feature {
    * @return r The computed residual.
    * @return w Weight induced by huber kernel.
    */
-  inline void jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
-                       const Eigen::Vector2d &z, Eigen::Matrix<double, 2, 3> &J, Eigen::Vector2d &r,
-                       double &w) const;
+  inline void jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x, const Eigen::Vector2d &z,
+                       Eigen::Matrix<double, 2, 3> &J, Eigen::Vector2d &r, double &w) const;
 
   /*
    * @brief Compute the initial guess of the feature's 3d position using only two views.
@@ -119,8 +119,7 @@ struct Feature {
 
   // Store the observations of the features in the state_id(key)-image_coordinates(value) manner.
   std::map<StateIDType, Eigen::Vector4d, std::less<StateIDType>,
-           Eigen::aligned_allocator<std::pair<const StateIDType, Eigen::Vector4d>>>
-      observations;
+           Eigen::aligned_allocator<std::pair<const StateIDType, Eigen::Vector4d>>> observations;
 
   // 3d postion of the feature in the world frame.
   Eigen::Vector3d position;
@@ -139,8 +138,8 @@ typedef Feature::FeatureIDType FeatureIDType;
 typedef std::map<FeatureIDType, Feature, std::less<int>,
                  Eigen::aligned_allocator<std::pair<const FeatureIDType, Feature> > > MapServer;
 
-void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
-                   const Eigen::Vector2d &z, double &e) const {
+void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x, const Eigen::Vector2d &z,
+                   double &e) const {
   // Compute hi1, hi2, and hi3 as Equation (37).
   const double &alpha = x(0);
   const double &beta = x(1);
@@ -148,8 +147,7 @@ void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
 
   // alpha = Xj/Zj, beta = Yj/Zj, rho = 1/Zj;
   // h as Equation (33) && Equation (34)
-  Eigen::Vector3d h =
-      T_c0_ci.linear() * Eigen::Vector3d(alpha, beta, 1.0) + rho * T_c0_ci.translation();
+  Eigen::Vector3d h = T_c0_ci.linear() * Eigen::Vector3d(alpha, beta, 1.0) + rho * T_c0_ci.translation();
   double &h1 = h(0);
   double &h2 = h(1);
   double &h3 = h(2);
@@ -163,16 +161,14 @@ void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
 }
 
 // Jacobian about residual to 3d position
-void Feature::jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x,
-                       const Eigen::Vector2d &z, Eigen::Matrix<double, 2, 3> &J, Eigen::Vector2d &r,
-                       double &w) const {
+void Feature::jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x, const Eigen::Vector2d &z,
+                       Eigen::Matrix<double, 2, 3> &J, Eigen::Vector2d &r, double &w) const {
   // Compute hi1, hi2, and hi3 as Equation (37).
   const double &alpha = x(0);
   const double &beta = x(1);
   const double &rho = x(2);
 
-  Eigen::Vector3d h =
-      T_c0_ci.linear() * Eigen::Vector3d(alpha, beta, 1.0) + rho * T_c0_ci.translation();
+  Eigen::Vector3d h = T_c0_ci.linear() * Eigen::Vector3d(alpha, beta, 1.0) + rho * T_c0_ci.translation();
   double &h1 = h(0);
   double &h2 = h(1);
   double &h3 = h(2);
@@ -201,29 +197,46 @@ void Feature::jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &
 }
 
 /**
- * p2_3d = T_c1_c2.inverse() * p*[z1(0), z1(1), 1]
- * p2_3d(0)/p2_3d(2) = z2(0)
- * p2_3d(1)/p2_3d(2) = z2(1)
- *  we can get p
+ *  R(u1,v1,1)'d+t // (u2,v2,1)',
+ *  R(u1,v1,1)' x (u2,v2,1)' d = -t x (u2,v2,1)'
+ *  <=> Ax = b => A+ = (A.t()*A).inverse() * A.t();
+ *  x = (A+) * b;
  */
 void Feature::generateInitialGuess(const Eigen::Isometry3d &T_c1_c2, const Eigen::Vector2d &z1,
                                    const Eigen::Vector2d &z2, Eigen::Vector3d &p) const {
+	
   // Construct a least square problem to solve the depth.
   Eigen::Vector3d m = T_c1_c2.linear() * Eigen::Vector3d(z1(0), z1(1), 1.0);
-
   Eigen::Vector2d A(0.0, 0.0);
-  A(0) = m(0) - z2(0) * m(2);
-  A(1) = m(1) - z2(1) * m(2);
-
+  A(0) = m(0) - z2(0)*m(2);
+  A(1) = m(1) - z2(1)*m(2);
   Eigen::Vector2d b(0.0, 0.0);
-  b(0) = z2(0) * T_c1_c2.translation()(2) - T_c1_c2.translation()(0);
-  b(1) = z2(1) * T_c1_c2.translation()(2) - T_c1_c2.translation()(1);
+  b(0) = z2(0)*T_c1_c2.translation()(2) - T_c1_c2.translation()(0);
+  b(1) = z2(1)*T_c1_c2.translation()(2) - T_c1_c2.translation()(1);
 
   // Solve for the depth.
   double depth = (A.transpose() * A).inverse() * A.transpose() * b;
   p(0) = z1(0) * depth;
   p(1) = z1(1) * depth;
   p(2) = depth;
+  
+  // debug another method
+//   Eigen::Matrix3d R_c1_c2 = T_c1_c2.linear();
+//   Eigen::Vector3d t_c1_c2 = T_c1_c2.translation();
+//   std::cout << "depth = " << depth << std::endl;
+//   
+//   Eigen::Vector3d z2_t(z2(0), z2(1), 1.0);
+//   
+//   Eigen::Matrix3d skewSymmetric_m;
+//   skewSymmetric_m << 0, -m(2), m(1), m(2), 0, -m(0), -m(1), m(0), 0;
+//   Eigen::Vector3d A_new = skewSymmetric_m * z2_t;
+// 
+//   Eigen::Matrix3d skewSymmetric_t;
+//   skewSymmetric_t <<  0, -t_c1_c2(2), t_c1_c2(1), t_c1_c2(2), 0, -t_c1_c2(0), -t_c1_c2(1), t_c1_c2(0), 0;
+//   Eigen::Vector3d b_new = -1 * skewSymmetric_t * z2_t;
+//   double depth_new = (A_new.transpose() * A_new).inverse() * A_new.transpose() * b_new;
+//   std::cout << "new depth = " << depth_new << std::endl;
+  
   return;
 }
 
@@ -236,14 +249,12 @@ bool Feature::checkMotion(const CamStateServer &cam_states) const {
       quaternionToRotation(cam_states.find(first_cam_id)->second.orientation).transpose();
   first_cam_pose.translation() = cam_states.find(first_cam_id)->second.position;
   Eigen::Isometry3d last_cam_pose;
-  last_cam_pose.linear() =
-      quaternionToRotation(cam_states.find(last_cam_id)->second.orientation).transpose();
+  last_cam_pose.linear() = quaternionToRotation(cam_states.find(last_cam_id)->second.orientation).transpose();
   last_cam_pose.translation() = cam_states.find(last_cam_id)->second.position;
 
   // Get the direction of the feature when it is first observed.
   // This direction is represented in the world frame.
-  Eigen::Vector3d feature_direction(observations.begin()->second(0),
-                                    observations.begin()->second(1), 1.0);
+  Eigen::Vector3d feature_direction(observations.begin()->second(0), observations.begin()->second(1), 1.0);
   feature_direction = feature_direction / feature_direction.norm();
   feature_direction = first_cam_pose.linear() * feature_direction;
 
@@ -263,8 +274,8 @@ bool Feature::checkMotion(const CamStateServer &cam_states) const {
 
 bool Feature::initializePosition(const CamStateServer &cam_states) {
   // Organize camera poses and feature observations properly.
-  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d> > cam_poses(0);
-  std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d> > measurements(0);
+  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> cam_poses(0);
+  std::vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> measurements(0);
 
   for (auto &m : observations) {
     // TODO: This should be handled properly. Normally, the required camera states
@@ -374,8 +385,7 @@ bool Feature::initializePosition(const CamStateServer &cam_states) {
 
   // Covert the feature position from inverse depth
   // representation to its 3d coordinate.
-  Eigen::Vector3d final_position(solution(0) / solution(2), solution(1) / solution(2),
-                                 1.0 / solution(2));
+  Eigen::Vector3d final_position(solution(0) / solution(2), solution(1) / solution(2), 1.0 / solution(2));
 
   // Check if the solution is valid. Make sure the feature
   // is in front of every camera frame observing it.

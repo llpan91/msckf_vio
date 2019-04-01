@@ -110,15 +110,13 @@ bool ImageProcessor::loadParameters() {
 
   ROS_INFO("===========================================");
   ROS_INFO("cam0_resolution: %d, %d", cam0_resolution[0], cam0_resolution[1]);
-  ROS_INFO("cam0_intrinscs: %f, %f, %f, %f", cam0_intrinsics[0], cam0_intrinsics[1], cam0_intrinsics[2],
-           cam0_intrinsics[3]);
+  ROS_INFO("cam0_intrinscs: %f, %f, %f, %f", cam0_intrinsics[0], cam0_intrinsics[1], cam0_intrinsics[2], cam0_intrinsics[3]);
   ROS_INFO("cam0_distortion_model: %s", cam0_distortion_model.c_str());
   ROS_INFO("cam0_distortion_coefficients: %f, %f, %f, %f", cam0_distortion_coeffs[0],
            cam0_distortion_coeffs[1], cam0_distortion_coeffs[2], cam0_distortion_coeffs[3]);
 
   ROS_INFO("cam1_resolution: %d, %d", cam1_resolution[0], cam1_resolution[1]);
-  ROS_INFO("cam1_intrinscs: %f, %f, %f, %f", cam1_intrinsics[0], cam1_intrinsics[1], cam1_intrinsics[2],
-           cam1_intrinsics[3]);
+  ROS_INFO("cam1_intrinscs: %f, %f, %f, %f", cam1_intrinsics[0], cam1_intrinsics[1], cam1_intrinsics[2],cam1_intrinsics[3]);
   ROS_INFO("cam1_distortion_model: %s", cam1_distortion_model.c_str());
   ROS_INFO("cam1_distortion_coefficients: %f, %f, %f, %f", cam1_distortion_coeffs[0],
            cam1_distortion_coeffs[1], cam1_distortion_coeffs[2], cam1_distortion_coeffs[3]);

@@ -433,7 +433,7 @@ void MsckfVio::batchImuProcessing(const double& time_bound) {
       continue;
     }
     if (imu_time > time_bound) break;
-    // Convert the msgs.
+    // Convert the msgs. when imu_time during start_frame to time_bound
     Vector3d m_gyro, m_acc;
     tf::vectorMsgToEigen(imu_msg.angular_velocity, m_gyro);
     tf::vectorMsgToEigen(imu_msg.linear_acceleration, m_acc);
@@ -471,13 +471,20 @@ void MsckfVio::processModel(const double& time, const Vector3d& m_gyro, const Ve
   G.block<3, 3>(6, 6) = -quaternionToRotation(imu_state.orientation).transpose();
   G.block<3, 3>(9, 9) = Matrix3d::Identity();
 
-  // Approximate matrix exponential to the 3rd order,
-  // which can be considered to be accurate enough assuming dtime is within 0.01s.
+  /**
+   * Approximate matrix exponential to the 3rd order,
+   * which can be considered to be accurate enough assuming dtime is within 0.01s.
+   * F和G是连续时间下的误差方程，需要离散化
+   * x‘= F * x + G * n离散化得到方程
+   * x(k+1) = Φx(k) + W(k)
+   * 离散化状态转移矩阵F得到的矩阵为Φ，计算详见组合导航44页
+   * Φ等于e^(F*△t)
+   * 将其泰勒展开，保留三阶项：Φ = I + F * △t + 0.5 * F^2 * △t^2+....
+   */
   Matrix<double, 21, 21> Fdt = F * dtime;
   Matrix<double, 21, 21> Fdt_square = Fdt * Fdt;
   Matrix<double, 21, 21> Fdt_cube = Fdt_square * Fdt;
-  Matrix<double, 21, 21> Phi =
-      Matrix<double, 21, 21>::Identity() + Fdt + 0.5 * Fdt_square + (1.0 / 6.0) * Fdt_cube;
+  Matrix<double, 21, 21> Phi = Matrix<double, 21, 21>::Identity() + Fdt + 0.5 * Fdt_square + (1.0 / 6.0) * Fdt_cube;
 
   // TODO Propogate the state using 4th order Runge-Kutta
   predictNewState(dtime, gyro, acc);
@@ -498,17 +505,12 @@ void MsckfVio::processModel(const double& time, const Vector3d& m_gyro, const Ve
   Phi.block<3, 3>(12, 0) = A2 - (A2 * u - w2) * s;
 
   // Propogate the state covariance matrix.
-  Matrix<double, 21, 21> Q =
-      Phi * G * state_server.continuous_noise_cov * G.transpose() * Phi.transpose() * dtime;
-  state_server.state_cov.block<21, 21>(0, 0) =
-      Phi * state_server.state_cov.block<21, 21>(0, 0) * Phi.transpose() + Q;
+  Matrix<double, 21, 21> Q = Phi * G * state_server.continuous_noise_cov * G.transpose() * Phi.transpose() * dtime;
+  state_server.state_cov.block<21, 21>(0, 0) = Phi * state_server.state_cov.block<21, 21>(0, 0) * Phi.transpose() + Q;
 
   if (state_server.cam_states.size() > 0) {
-    state_server.state_cov.block(0, 21, 21, state_server.state_cov.cols() - 21) =
-        Phi * state_server.state_cov.block(0, 21, 21, state_server.state_cov.cols() - 21);
-    state_server.state_cov.block(21, 0, state_server.state_cov.rows() - 21, 21) =
-        state_server.state_cov.block(21, 0, state_server.state_cov.rows() - 21, 21) *
-        Phi.transpose();
+    state_server.state_cov.block(0, 21, 21, state_server.state_cov.cols() - 21) = Phi * state_server.state_cov.block(0, 21, 21, state_server.state_cov.cols() - 21);
+    state_server.state_cov.block(21, 0, state_server.state_cov.rows() - 21, 21) = state_server.state_cov.block(21, 0, state_server.state_cov.rows() - 21, 21) * Phi.transpose();
   }
 
   MatrixXd state_cov_fixed = (state_server.state_cov + state_server.state_cov.transpose()) / 2.0;
@@ -524,7 +526,7 @@ void MsckfVio::processModel(const double& time, const Vector3d& m_gyro, const Ve
   return;
 }
 
-// TODO which param should output ??
+// update the state vector q, v, and p 
 void MsckfVio::predictNewState(const double& dt, const Vector3d& gyro, const Vector3d& acc) {
   double gyro_norm = gyro.norm();
   Matrix4d Omega = Matrix4d::Zero();
@@ -539,7 +541,11 @@ void MsckfVio::predictNewState(const double& dt, const Vector3d& gyro, const Vec
   // Some pre-calculation
   // q' = 0.5 * Omega * q
   // q(n) = q(n-1) (x) q{w(n)*△t} , (X) is the quaternion Multiply << quaternion kinematics for error-state KF>> (equal-214)
+  
+  // dq_dt is a quateration after update one time, dq_dt2 is the quateration at time of  1/2*△t
   Vector4d dq_dt, dq_dt2;
+  
+  // <Indirect Kalman Filter for 3D Attitude Estimation>> eq.122
   if (gyro_norm > 1e-5) {
     dq_dt = (cos(gyro_norm * dt * 0.5) * Matrix4d::Identity() + 1 / gyro_norm * sin(gyro_norm * dt * 0.5) * Omega) * q;
       dq_dt2 = (cos(gyro_norm * dt * 0.25) * Matrix4d::Identity() + 1 / gyro_norm * sin(gyro_norm * dt * 0.25) * Omega) * q;
@@ -650,6 +656,7 @@ void MsckfVio::addFeatureObservations(const CameraMeasurementConstPtr& msg) {
   return;
 }
 
+// TODO
 void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const FeatureIDType& feature_id, 
 				   Matrix<double, 4, 6>& H_x, Matrix<double, 4, 3>& H_f, Vector4d& r) {
   // Prepare all the required data.
@@ -701,8 +708,7 @@ void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const Featur
   H_x = dz_dpc0 * dpc0_dxc + dz_dpc1 * dpc1_dxc;
   H_f = dz_dpc0 * dpc0_dpg + dz_dpc1 * dpc1_dpg;
 
-  // Modifty the measurement Jacobian to ensure
-  // observability constrain.
+  // TODO Modifty the measurement Jacobian to ensure observability constrain.
   Matrix<double, 4, 6> A = H_x;
   Matrix<double, 6, 1> u = Matrix<double, 6, 1>::Zero();
   u.block<3, 1>(0, 0) = quaternionToRotation(cam_state.orientation_null) * IMUState::gravity;
@@ -716,6 +722,7 @@ void MsckfVio::measurementJacobian(const StateIDType& cam_state_id, const Featur
   return;
 }
 
+// TODO
 void MsckfVio::featureJacobian(const FeatureIDType& feature_id, const std::vector<StateIDType>& cam_state_ids, MatrixXd& H_x, VectorXd& r) {
 
   const auto& feature = map_server[feature_id];
@@ -763,6 +770,7 @@ void MsckfVio::featureJacobian(const FeatureIDType& feature_id, const std::vecto
   return;
 }
 
+// TODO
 void MsckfVio::measurementUpdate(const MatrixXd& H, const VectorXd& r) {
   if (H.rows() == 0 || r.rows() == 0) return;
 
@@ -974,8 +982,7 @@ void MsckfVio::findRedundantCamStates(vector<StateIDType>& rm_cam_state_ids) {
   const Vector3d key_position = key_cam_state_iter->second.position;
   const Matrix3d key_rotation = quaternionToRotation(key_cam_state_iter->second.orientation);
 
-  // Mark the camera states to be removed based on the
-  // motion between states.
+  // Mark the camera states to be removed based on the motion between states.
   for (int i = 0; i < 2; ++i) {
     const Vector3d position = cam_state_iter->second.position;
     const Matrix3d rotation = quaternionToRotation(cam_state_iter->second.orientation);
@@ -1000,6 +1007,9 @@ void MsckfVio::findRedundantCamStates(vector<StateIDType>& rm_cam_state_ids) {
 }
 
 void MsckfVio::pruneCamStateBuffer() {
+  
+  // std::cout << "max_cam_state_size = " << max_cam_state_size << std::endl;
+  // max_cam_state_size = 20;
   if (state_server.cam_states.size() < max_cam_state_size) return;
 
   // Find two camera states to be removed.
@@ -1201,8 +1211,11 @@ void MsckfVio::publish(const ros::Time& time) {
   H_pose.block<3, 3>(3, 3) = IMUState::T_imu_body.linear();
   Matrix<double, 6, 6> P_body_pose = H_pose * P_imu_pose * H_pose.transpose();
 
-  for (int i = 0; i < 6; ++i)
-    for (int j = 0; j < 6; ++j) odom_msg.pose.covariance[6 * i + j] = P_body_pose(i, j);
+  for (int i = 0; i < 6; ++i){
+    for (int j = 0; j < 6; ++j){
+      odom_msg.pose.covariance[6 * i + j] = P_body_pose(i, j);
+    }
+  }
 
   // Construct the covariance for the velocity.
   Matrix3d P_imu_vel = state_server.state_cov.block<3, 3>(6, 6);
@@ -1217,8 +1230,7 @@ void MsckfVio::publish(const ros::Time& time) {
 
   odom_pub.publish(odom_msg);
 
-  // Publish the 3D positions of the features that
-  // has been initialized.
+  // Publish the 3D positions of the features that has been initialized.
   pcl::PointCloud<pcl::PointXYZ>::Ptr feature_msg_ptr(new pcl::PointCloud<pcl::PointXYZ>());
   feature_msg_ptr->header.frame_id = fixed_frame_id;
   feature_msg_ptr->height = 1;
@@ -1231,7 +1243,6 @@ void MsckfVio::publish(const ros::Time& time) {
     }
   }
   feature_msg_ptr->width = feature_msg_ptr->points.size();
-
   feature_pub.publish(feature_msg_ptr);
 
   return;
