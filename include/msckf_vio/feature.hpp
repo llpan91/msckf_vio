@@ -141,16 +141,12 @@ typedef std::map<FeatureIDType, Feature, std::less<int>,
 void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x, const Eigen::Vector2d &z,
                    double &e) const {
   // Compute hi1, hi2, and hi3 as Equation (37).
-  const double &alpha = x(0);
-  const double &beta = x(1);
-  const double &rho = x(2);
+  const double &alpha = x(0), &beta = x(1), &rho = x(2);
 
   // alpha = Xj/Zj, beta = Yj/Zj, rho = 1/Zj;
   // h as Equation (33) && Equation (34)
   Eigen::Vector3d h = T_c0_ci.linear() * Eigen::Vector3d(alpha, beta, 1.0) + rho * T_c0_ci.translation();
-  double &h1 = h(0);
-  double &h2 = h(1);
-  double &h3 = h(2);
+  double &h1 = h(0), &h2 = h(1), &h3 = h(2);
 
   // Predict the feature observation in ci frame.
   Eigen::Vector2d z_hat(h1 / h3, h2 / h3);
@@ -164,14 +160,10 @@ void Feature::cost(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x, c
 void Feature::jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &x, const Eigen::Vector2d &z,
                        Eigen::Matrix<double, 2, 3> &J, Eigen::Vector2d &r, double &w) const {
   // Compute hi1, hi2, and hi3 as Equation (37).
-  const double &alpha = x(0);
-  const double &beta = x(1);
-  const double &rho = x(2);
+  const double &alpha = x(0), &beta = x(1), &rho = x(2);
 
   Eigen::Vector3d h = T_c0_ci.linear() * Eigen::Vector3d(alpha, beta, 1.0) + rho * T_c0_ci.translation();
-  double &h1 = h(0);
-  double &h2 = h(1);
-  double &h3 = h(2);
+  double &h1 = h(0), &h2 = h(1), &h3 = h(2);
 
   // Compute the Jacobian.
   Eigen::Matrix3d W;
@@ -187,7 +179,7 @@ void Feature::jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &
 
   // Compute the weight based on the residual.
   double e = r.norm();
-  if (e <= optimization_config.huber_epsilon) {
+  if (e <= optimization_config.huber_epsilon) { // huber_epsilon = 0.01
     w = 1.0;
   } else {
     w = optimization_config.huber_epsilon / (2 * e);
@@ -202,6 +194,11 @@ void Feature::jacobian(const Eigen::Isometry3d &T_c0_ci, const Eigen::Vector3d &
  *  <=> Ax = b => A+ = (A.t()*A).inverse() * A.t();
  *  x = (A+) * b;
  */
+// z1 and z2 is the measurement at normalized camera coordinate
+
+  // Pay attention: in following code
+  // A(0), A(1) correspond to second and first dim of -R(u1,v1,1)' x (u2,v2,1)
+  // b(0), b(1) correspond to second and first dim of -t x (u2,v2,1)
 void Feature::generateInitialGuess(const Eigen::Isometry3d &T_c1_c2, const Eigen::Vector2d &z1,
                                    const Eigen::Vector2d &z2, Eigen::Vector3d &p) const {
 	
